@@ -1,0 +1,17 @@
+Agentic Service Dispatch turns human approval into a real browser capability boundary.
+
+On the live Vercel deployment, native Chrome one fifty-one reports five page-owned Web M C P tools. They can inspect the active vehicle, read service history, compare qualified providers, check availability, and create a draft. The dangerous write tool does not exist.
+
+A single natural-language request asks for a certified fictional detailer before Friday, under sixty thousand yen, with previous service history checked. The deterministic runner calls those five registered tools directly. It is not pretending to be an A I agent. The result is reviewable: one provider matches, two are excluded, and the page says draft, not submitted.
+
+Now the human approves this exact dispatch. Approval changes the live browser registry from five tools to six. The new commit approved dispatch capability is bound to the canonical S H A two fifty-six hash of the vehicle, provider, slot, price, scope, and rationale. Its schema accepts only the approval I D, it expires after one hundred twenty seconds, and it can be used once.
+
+When the one-time tool runs, the result settles, the approval is consumed, and the capability unregisters. Six becomes five. The page confirms commit approved dispatch revoked. Reset is idempotent and restores the exact baseline.
+
+The opening, approved, committed, and reset frames are native Chrome evidence from the public deployment. The moving interaction is visibly labeled as the deterministic Web M C P test adapter. It exercises the same production adapter boundary without claiming browser-engine conformance.
+
+The data is fictional and browser-local. There is no database, A P I key, external business write, or customer information.
+
+This pattern applies beyond service dispatch: procurement, refunds, bookings, field work, and any workflow where an agent prepares evidence but a person grants one narrow authority.
+
+Approval changed what the agent could do, and one exact action consumed it.
