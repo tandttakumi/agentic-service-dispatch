@@ -121,5 +121,5 @@ A production version would store approval and idempotency transactionally, authe
 
 - Native evidence: the public deployment completed a Chrome 151.0.7922.174 lifecycle on 2026-08-27 with visible 5 → 6 → 5, two Resets, four committed screenshots, and no captured error logs.
 - Automated screenshots: visibly labeled Playwright harness; not browser-engine conformance.
-- Public artifacts: [source repository](https://github.com/tandttakumi/agentic-service-dispatch) and [live app](https://agentic-service-dispatch.vercel.app).
-- Remaining external artifacts: publicly visible YouTube video URL and completed Devpost entry.
+- Public artifacts: [source repository](https://github.com/tandttakumi/agentic-service-dispatch), [live app](https://agentic-service-dispatch.vercel.app), and [2:02 YouTube demo](https://youtu.be/ppIc0-dbmKA).
+- Remaining external artifact: completed Devpost entry.

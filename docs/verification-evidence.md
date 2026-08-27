@@ -100,7 +100,7 @@ All nine were opened and inspected after final generation.
 
 | View | Outcome | Residual |
 | --- | --- | --- |
-| Official rules | English, license, build-window, public source, live URL, and description evidence pass. | Public YouTube URL and Devpost entry remain external blockers. |
+| Official rules | English, license, build-window, public source, live URL, public YouTube video, and description evidence pass. | The Devpost entry remains the external blocker. |
 | WebMCP leverage | Native imperative API, dynamic registration, getTools truth, toolchange, execution, and AbortSignal revocation are core. | Repeat native final recording because the standard is experimental. |
 | Security and race | Exact hash, const input, TTL, generation, idempotency, one-time use, serialized lifecycle, and soak pass. | In-memory prototype is not authenticated production authorization. |
 | React and Next.js | Stable external store, cleanup, stale-read guard, hydration collectors, current local docs, scoped Turbopack root, production build, and public deployment pass. | No deployed field-performance data. |
@@ -116,4 +116,4 @@ All nine were opened and inspected after final generation.
 
 ## Final risk statement
 
-No critical or moderate implementation or deployment issue remained after the final red team. Public source and the working live URL are complete. The submission as a whole is **not Stage 1 ready** until the verified local video is publicly visible on YouTube and the Devpost entry is completed.
+No critical or moderate implementation or deployment issue remained after the final red team. Public source, the working live URL, and the [verified public video](https://youtu.be/ppIc0-dbmKA) are complete. The submission as a whole is **not Stage 1 ready** until the Devpost entry is completed.

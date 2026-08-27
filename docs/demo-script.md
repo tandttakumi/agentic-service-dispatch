@@ -4,7 +4,7 @@
 
 The local master is `submission/agentic-service-dispatch-demo.mp4` (ignored from Git source because it is published separately). It is 1440×900, H.264 High / AAC-LC 48 kHz mono, English audio, fast-start MP4, and SHA-256 `597ced40dff68bd60a48838afdaee08abf6981839443baaa8f7f12066f4ff2c2`. Full decode verification passed.
 
-The cut uses four native Chrome 151 frames from the public deployment and a 34-second moving interaction that is visibly overlaid **RECORDED INTERACTION · VISIBLE TEST ADAPTER**. The narration explicitly distinguishes native evidence from the deterministic adapter. There is no music, third-party logo, stock asset, customer data, or external write. The transcript is committed at `submission/narration.txt`. Public YouTube upload remains pending.
+The cut uses four native Chrome 151 frames from the public deployment and a 34-second moving interaction that is visibly overlaid **RECORDED INTERACTION · VISIBLE TEST ADAPTER**. The narration explicitly distinguishes native evidence from the deterministic adapter. There is no music, third-party logo, stock asset, customer data, or external write. The transcript is committed at `submission/narration.txt`. The verified cut is public at [youtu.be/ppIc0-dbmKA](https://youtu.be/ppIc0-dbmKA), with comments disabled.
 
 ## Native continuous-recording target — 2:20
 

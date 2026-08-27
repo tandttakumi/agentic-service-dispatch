@@ -42,13 +42,12 @@ Scored from scratch on 2026-08-27 after reviewing the current rules, 30 public W
 
 **Conditional and medium, not assured.** The WebMCP Leverage argument is finalist-grade if the final video shows native/compatible-agent discovery and the uninterrupted 5 → 6 → 5 lifecycle immediately. The largest ranking drag is Potential Impact: judges may see a sophisticated authorization demo rather than a product with demonstrated demand.
 
-Publication follow-through completed after this score was assigned: a Public GitHub repository, READY Vercel URL, Chrome 151 native 5 → 6 → 5 evidence, four native screenshots, and a verified 2:02.40 English-audio local video master now exist. The numerical score remains the original strict score rather than being inflated after publication.
+Publication follow-through completed after this score was assigned: a Public GitHub repository, READY Vercel URL, Chrome 151 native 5 → 6 → 5 evidence, four native screenshots, and a verified [2:02 public English-audio video](https://youtu.be/ppIc0-dbmKA) now exist. The numerical score remains the original strict score rather than being inflated after publication.
 
 The highest-value remaining work is external:
 
-1. upload the verified sub-three-minute master publicly to YouTube;
-2. complete the Devpost entry and final eligibility/account checks;
-3. submit and then freeze all judged artifacts.
+1. complete the Devpost entry and final eligibility/account checks;
+2. submit and then freeze all judged artifacts.
 
 ## Evidence boundaries
 
@@ -56,4 +55,4 @@ The highest-value remaining work is external:
 - Playwright uses a visibly labeled deterministic document.modelContext harness.
 - Native Chrome evidence covers one 2026-08-27 public-deployment lifecycle in version 151.0.7922.174 with visible 5 → 6 → 5, two Resets, four screenshots, and no captured error logs.
 - Impact and adjacent-market claims are reasoned hypotheses, not field results.
-- Public source and live deployment are complete; the video master is local until YouTube publication, and no Devpost final Submit has occurred.
+- Public source, live deployment, and public YouTube video are complete; no Devpost final Submit has occurred.

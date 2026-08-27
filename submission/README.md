@@ -13,6 +13,8 @@
 
 The committed `narration.txt` is the exact generated narration source. The moving interaction is visibly labeled as the deterministic test adapter. Native Chrome evidence appears as separately labeled initial, approved, committed, and reset frames.
 
-## Remaining operator step
+## Published copy
 
-Upload the verified MP4 to YouTube as **Public**, confirm the rendered duration and audio, then add that URL to Devpost. Do not modify the repository, live site, video, or Devpost entry after the submission deadline and during judging.
+The verified master is public on the Re Labs channel at [youtu.be/ppIc0-dbmKA](https://youtu.be/ppIc0-dbmKA). YouTube reports a rendered duration of 2:02, completed processing, no copyright issue, and comments disabled.
+
+Add the public URL to Devpost. Do not modify the repository, live site, video, or Devpost entry after the submission deadline and during judging.

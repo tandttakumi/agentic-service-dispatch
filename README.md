@@ -127,7 +127,7 @@ See the evidence-level [Judging map](docs/judging-map.md), [fresh strict scoreca
 
 ## Submission readiness
 
-The [public source repository](https://github.com/tandttakumi/agentic-service-dispatch) and [working live URL](https://agentic-service-dispatch.vercel.app) are ready. A 2:02.40 English-audio H.264/AAC submission cut has been produced locally and verified, but the Official Rules require the final video to be publicly visible on YouTube. The remaining external steps are the public YouTube upload and the Devpost entry/final Submit.
+The [public source repository](https://github.com/tandttakumi/agentic-service-dispatch), [working live URL](https://agentic-service-dispatch.vercel.app), and [2:02 public YouTube demo](https://youtu.be/ppIc0-dbmKA) are ready. The video has English audio, completed YouTube processing and copyright checks, and comments disabled. The remaining external step is the Devpost entry and final Submit.
 
 ## License
 

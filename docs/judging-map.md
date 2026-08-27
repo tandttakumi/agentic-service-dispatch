@@ -9,7 +9,7 @@ This file maps each official criterion to evidence a judge can see in the produc
 | Functional WebMCP app | Public deployment; Chrome 151 native 5 → 6 → 5 lifecycle; 65 tests; four E2E flows. | Keep the live URL unchanged through judging. |
 | English description and implementation explanation | README, architecture, security, compliance, and selected Devpost draft. | Paste final copy into Devpost. |
 | Public source and license | Public clean source snapshot, README, assets, setup, and MIT license. | Keep the repository unchanged through judging. |
-| Public sub-three-minute demo video with audio | Verified 2:02.40 H.264/AAC English-audio master and transcript. | Upload publicly to YouTube and verify the URL. |
+| Public sub-three-minute demo video with audio | Verified 2:02.40 H.264/AAC English-audio master and transcript; [public YouTube copy](https://youtu.be/ppIc0-dbmKA). | Keep the video public and unchanged through judging. |
 
 See [current-compliance.md](current-compliance.md) for the controlling rules and missing external artifacts.
 
@@ -41,7 +41,7 @@ A click bot could press an approval button, and a remote API could expose commit
 
 ### Remaining point withheld
 
-The live URL and native Chrome evidence exist. The remaining point is withheld until the final YouTube presentation is public and judged as a complete human-agent story.
+The live URL, native Chrome evidence, and public YouTube presentation exist. The remaining point stays withheld because final presentation quality is judge-dependent.
 
 ## Execution — 23/25
 
@@ -137,4 +137,4 @@ The fixture is narrow, local, and fictional, and its visual spectacle is lower t
 
 - Native Chrome: one successful public-deployment lifecycle on 2026-08-27 in version 151.0.7922.174, visible 5 → 6 → 5, two Resets, four screenshots, and no captured error logs.
 - Automated application: deterministic test adapter/harness, never described as native conformance.
-- External submission: public repo and live URL are complete; public YouTube URL and Devpost entry remain.
+- External submission: public repo, live URL, and [public YouTube video](https://youtu.be/ppIc0-dbmKA) are complete; the Devpost entry remains.

@@ -43,13 +43,13 @@ The controlling Devpost rules state:
 | Native browser access | Pass with evidence boundary | Chrome 151.0.7922.174 completed the public deployment's Run → Approve → Commit → Reset lifecycle with native availability, visible 5 → 6 → 5, two Resets, and zero captured error logs. Four native screenshots are committed. |
 | Working live URL | Pass | [agentic-service-dispatch.vercel.app](https://agentic-service-dispatch.vercel.app) returns HTTP 200 from a READY production deployment. |
 | Public repository URL | Pass | [github.com/tandttakumi/agentic-service-dispatch](https://github.com/tandttakumi/agentic-service-dispatch) is Public and exposes the MIT license. |
-| Public video under three minutes | Upload pending | A verified 2:02.40 English-audio H.264/AAC cut exists locally; Official Rules still require a publicly visible YouTube URL. |
-| Devpost project entry | Missing external requirement | Draft copy exists; no submission or account action has been performed. |
+| Public video under three minutes | Pass | [The 2:02 public YouTube demo](https://youtu.be/ppIc0-dbmKA) has English audio, completed processing and copyright checks, and comments disabled. |
+| Devpost project entry | Missing external requirement | The account is signed in and draft copy exists; challenge registration and the project entry remain incomplete. |
 | Original / licensed media | Pass locally | Original inline icon and UI only; no music, stock imagery, or third-party logos. |
 | No post-deadline edits | Future operator requirement | Freeze the repo, live site, and submission after the deadline and during judging. |
 | Entrant eligibility and account facts | Human verification required | Age, residence, team membership, employer consent, and Devpost account facts are not inferable from this repository. |
 
-The implementation, public source, working live URL, native evidence, and local video master are ready. Submission readiness still requires a public YouTube URL and a completed Devpost entry.
+The implementation, public source, working live URL, native evidence, and public YouTube video are ready. Submission readiness still requires a completed Devpost entry.
 
 ## Current WebMCP alignment
 
