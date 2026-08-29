@@ -19,19 +19,20 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary", "html"],
-      include: [
-        "src/lib/domain/**/*.ts",
-        "src/lib/webmcp/fake-adapter.ts",
-        "src/lib/webmcp/tool-registry.ts",
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "src/**/*.d.ts",
+        "src/app/layout.tsx",
+        "src/app/page.tsx",
+        "src/lib/domain/types.ts",
+        "src/lib/webmcp/types.ts",
       ],
-      exclude: ["src/lib/domain/types.ts"],
       thresholds: {
-        statements: 80,
-        branches: 80,
-        functions: 85,
-        lines: 80,
+        statements: 94,
+        branches: 90,
+        functions: 97,
+        lines: 95,
       },
     },
   },
 });
-

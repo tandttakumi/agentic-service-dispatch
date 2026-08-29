@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import { APPROVAL_TTL_MS, remainingApprovalSeconds } from "./approval";
 import { hasAuditMessage } from "./audit-log";
-import { DispatchStore } from "./dispatch-machine";
+import { DispatchStore, transitionPhase } from "./dispatch-machine";
 import { DRAFT_INPUT, PROVIDERS, REQUEST_CONDITIONS } from "./fixtures";
-import type { Clock, CreateDraftInput } from "./types";
+import type { Clock, CreateDraftInput, DispatchPhase } from "./types";
 
 function setup() {
   let now = Date.parse("2026-08-26T03:00:00.000Z");
@@ -36,6 +36,101 @@ function prepareDraft(store: DispatchStore) {
 }
 
 describe("dispatch defensive branches", () => {
+  it("matches the complete six-phase transition matrix", () => {
+    const phases: DispatchPhase[] = [
+      "idle",
+      "context_loaded",
+      "providers_compared",
+      "draft_ready",
+      "approved",
+      "committed",
+    ];
+    const allowed = new Set([
+      "idle:context_loaded",
+      "context_loaded:providers_compared",
+      "providers_compared:draft_ready",
+      "draft_ready:approved",
+      "approved:draft_ready",
+      "approved:committed",
+    ]);
+
+    for (const from of phases) {
+      for (const to of phases) {
+        if (allowed.has(`${from}:${to}`)) {
+          expect(transitionPhase(from, to)).toBe(to);
+        } else {
+          expect(() => transitionPhase(from, to)).toThrowError(
+            expect.objectContaining({ code: "INVALID_TRANSITION" }),
+          );
+        }
+      }
+    }
+  });
+
+  it("returns every reachable phase to the same idle Reset postcondition", async () => {
+    const phases: DispatchPhase[] = [
+      "idle",
+      "context_loaded",
+      "providers_compared",
+      "draft_ready",
+      "approved",
+      "committed",
+    ];
+
+    for (const phase of phases) {
+      const { store } = setup();
+      if (phase !== "idle") {
+        store.loadVehicleContext();
+      }
+      if (
+        phase === "providers_compared" ||
+        phase === "draft_ready" ||
+        phase === "approved" ||
+        phase === "committed"
+      ) {
+        store.reviewServiceHistory("vehicle-001");
+        store.compareProviders();
+      }
+      if (
+        phase === "draft_ready" ||
+        phase === "approved" ||
+        phase === "committed"
+      ) {
+        store.checkAvailability(
+          PROVIDERS.map((provider) => provider.id),
+          REQUEST_CONDITIONS.completion_before,
+        );
+        store.createDraft(DRAFT_INPUT);
+      }
+      if (phase === "approved" || phase === "committed") {
+        const approval = await store.approveDraft();
+        if (phase === "committed") {
+          await store.commitApprovedDispatch(
+            approval.approval_id,
+            approval.generation,
+          );
+        }
+      }
+      expect(store.getSnapshot().phase).toBe(phase);
+
+      store.reset();
+
+      expect(store.getSnapshot()).toMatchObject({
+        phase: "idle",
+        service_history_reviewed: false,
+        providers_evaluated: false,
+        availability_checked: false,
+        provider_evaluations: [],
+        draft: null,
+        approval: null,
+        committed_dispatch: null,
+        audit_log: [],
+        error_code: null,
+        error_message: null,
+      });
+    }
+  });
+
   it("keeps repeated read operations idempotent", () => {
     const { store } = setup();
     const listener = vi.fn();
@@ -109,11 +204,11 @@ describe("dispatch defensive branches", () => {
   });
 
   it.each([
-    { provider_id: "provider-wrong" },
-    { slot_id: "slot-wrong" },
-    { quoted_price_jpy: 57_000 },
-    { rationale: "A different rationale." },
-  ])("rejects an inexact draft field: $provider_id$slot_id$quoted_price_jpy$rationale", (patch) => {
+    { field: "provider_id", patch: { provider_id: "provider-wrong" } },
+    { field: "slot_id", patch: { slot_id: "slot-wrong" } },
+    { field: "quoted_price_jpy", patch: { quoted_price_jpy: 57_000 } },
+    { field: "rationale", patch: { rationale: "A different rationale." } },
+  ])("rejects an inexact draft field: $field", ({ patch }) => {
     const { store } = setup();
     prepareComparison(store);
     store.checkAvailability(
@@ -166,6 +261,55 @@ describe("dispatch defensive branches", () => {
     await expect(first).resolves.toMatchObject({ status: "approved" });
   });
 
+  it("keeps a new approval locked when an older reset approval settles", async () => {
+    const { store } = setup();
+    const actualDigest = globalThis.crypto.subtle.digest.bind(
+      globalThis.crypto.subtle,
+    );
+    const releases: Array<() => void> = [];
+    const digest = vi
+      .spyOn(globalThis.crypto.subtle, "digest")
+      .mockImplementation(
+        (algorithm, data) =>
+          new Promise<ArrayBuffer>((resolve, reject) => {
+            releases.push(() => {
+              void actualDigest(algorithm, data).then(resolve, reject);
+            });
+          }),
+      );
+
+    try {
+      prepareDraft(store);
+      const oldApproval = store.approveDraft();
+      expect(releases).toHaveLength(1);
+
+      store.reset();
+      prepareDraft(store);
+      const currentApproval = store.approveDraft();
+      expect(releases).toHaveLength(2);
+
+      releases[0]();
+      await expect(oldApproval).rejects.toMatchObject({
+        code: "DRAFT_CHANGED_AFTER_APPROVAL",
+      });
+
+      const overlappingApproval = store.approveDraft();
+      void overlappingApproval.catch(() => undefined);
+      expect(releases).toHaveLength(2);
+      await expect(overlappingApproval).rejects.toMatchObject({
+        code: "CAPABILITY_NOT_AVAILABLE",
+      });
+
+      releases[1]();
+      await expect(currentApproval).resolves.toMatchObject({
+        status: "approved",
+      });
+    } finally {
+      for (const release of releases) release();
+      digest.mockRestore();
+    }
+  });
+
   it("returns zero countdown outside approval and a live countdown inside it", async () => {
     const { store, now, advance } = setup();
     expect(store.getRemainingApprovalSeconds()).toBe(0);
@@ -177,6 +321,40 @@ describe("dispatch defensive branches", () => {
     expect(store.getRemainingApprovalSeconds()).toBe(60);
   });
 
+  it("fails the countdown closed for malformed, extended, or future windows", async () => {
+    const { store, now } = setup();
+    prepareDraft(store);
+    const approval = await store.approveDraft();
+
+    expect(
+      remainingApprovalSeconds(
+        { ...approval, expires_at: "not-a-date" },
+        now(),
+      ),
+    ).toBe(0);
+    expect(
+      remainingApprovalSeconds(
+        {
+          ...approval,
+          expires_at: new Date(
+            Date.parse(approval.expires_at) + 1_000,
+          ).toISOString(),
+        },
+        now(),
+      ),
+    ).toBe(0);
+    expect(
+      remainingApprovalSeconds(
+        {
+          ...approval,
+          approved_at: new Date(now() + 1_000).toISOString(),
+          expires_at: new Date(now() + APPROVAL_TTL_MS + 1_000).toISOString(),
+        },
+        now(),
+      ),
+    ).toBe(0);
+  });
+
   it("rejects mutation without a draft and after commit", async () => {
     const { store } = setup();
     expect(() => store.mutateDraft({ rationale: "none" })).toThrowError(
@@ -186,6 +364,16 @@ describe("dispatch defensive branches", () => {
     store.mutateDraft({ rationale: "Pre-approval operator note." });
     const recreated = store.createDraft(DRAFT_INPUT);
     expect(recreated.rationale).toBe(DRAFT_INPUT.rationale);
+    Object.defineProperty(recreated, "rationale", {
+      configurable: true,
+      enumerable: true,
+      get: () => {
+        throw new Error("Hostile draft accessor must be replaced.");
+      },
+    });
+    const repaired = store.createDraft(DRAFT_INPUT);
+    expect(Object.is(repaired, recreated)).toBe(false);
+    expect(repaired.rationale).toBe(DRAFT_INPUT.rationale);
     const approval = await store.approveDraft();
     await store.commitApprovedDispatch(
       approval.approval_id,
@@ -242,5 +430,29 @@ describe("dispatch defensive branches", () => {
       "Temporary capability revoked by reset",
     ]);
   });
-});
 
+  it("deduplicates revocations with constant-size generation state", () => {
+    const { store } = setup();
+
+    for (let generation = 1; generation <= 1_000; generation += 1) {
+      store.markTemporaryCapabilityRevoked(generation, "reset");
+      store.reset();
+    }
+
+    const internals = store as unknown as {
+      latestRevokedGeneration: number;
+      revokedGenerations?: Set<number>;
+    };
+    expect(internals.latestRevokedGeneration).toBe(1_000);
+    expect(internals.revokedGenerations).toBeUndefined();
+
+    store.markTemporaryCapabilityRevoked(999, "changed");
+    store.markTemporaryCapabilityRevoked(1_000, "used");
+    expect(store.getSnapshot().audit_log).toEqual([]);
+
+    store.markTemporaryCapabilityRevoked(1_001, "used");
+    expect(store.getSnapshot().audit_log.map((entry) => entry.message)).toEqual([
+      "Temporary capability revoked after one exact action",
+    ]);
+  });
+});

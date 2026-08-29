@@ -1,9 +1,10 @@
 import {
   createApprovalRecord,
+  hasValidApprovalWindow,
   isApprovalExpired,
   remainingApprovalSeconds,
 } from "./approval";
-import { sha256Hex } from "./canonical-json";
+import { canonicalJson, sha256Hex } from "./canonical-json";
 import {
   DRAFT_INPUT,
   PROVIDERS,
@@ -19,6 +20,7 @@ import type {
   Clock,
   CreateDraftInput,
   DispatchDraft,
+  DomainErrorCode,
   DispatchPhase,
   DispatchState,
   IdFactory,
@@ -89,14 +91,31 @@ function validateDraftInput(input: CreateDraftInput): void {
   }
 }
 
+function throwIfExecutionAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw (
+      signal.reason ??
+      new DOMException("Tool execution was cancelled.", "AbortError")
+    );
+  }
+}
+
+const QUALIFIED_DRAFT_CANONICAL = canonicalJson(
+  buildDispatchDraft(DRAFT_INPUT),
+);
+
 export class DispatchStore {
   private state: DispatchState = createInitialState();
   private readonly listeners = new Set<() => void>();
   private readonly usedIdempotencyKeys = new Set<string>();
-  private readonly revokedGenerations = new Set<number>();
+  private latestRevokedGeneration = 0;
   private auditSequence = 0;
   private approvalGeneration = 0;
   private approvalInFlight = false;
+  private approvalCanonicalBinding: string | null = null;
+  private lifecycleFailureSequence = 0;
+  private activeLifecycleFailureToken: number | null = null;
+  private recoverableLifecycleFailureToken: number | null = null;
 
   constructor(
     private readonly clock: Clock = systemClock,
@@ -132,7 +151,12 @@ export class DispatchStore {
   private update(
     patch: Partial<DispatchState>,
     auditEntries: AuditEntry[] = [],
+    lifecycleFailureToken?: number,
   ): void {
+    if ("error_code" in patch || "error_message" in patch) {
+      this.activeLifecycleFailureToken = lifecycleFailureToken ?? null;
+      this.recoverableLifecycleFailureToken = null;
+    }
     this.state = {
       ...this.state,
       ...patch,
@@ -267,7 +291,7 @@ export class DispatchStore {
         provider_id: provider.id,
         slot: provider.slot,
         deadline_matches:
-          Date.parse(provider.slot.starts_at) < Date.parse(before),
+          Date.parse(provider.slot.ends_at) <= Date.parse(before),
       })),
     };
   }
@@ -290,6 +314,22 @@ export class DispatchStore {
         "History, provider comparison, and availability must be checked before drafting.",
       );
     }
+    this.expireApprovalIfNeeded();
+
+    if (
+      this.state.phase === "draft_ready" &&
+      this.state.draft &&
+      this.state.error_code === null &&
+      this.state.error_message === null
+    ) {
+      try {
+        if (canonicalJson(this.state.draft) === QUALIFIED_DRAFT_CANONICAL) {
+          return this.state.draft;
+        }
+      } catch {
+        // Replace hostile or unstable draft data with the qualified fixture.
+      }
+    }
 
     const draft = buildDispatchDraft(input);
     const approval =
@@ -300,6 +340,9 @@ export class DispatchStore {
             invalidation_reason: "A replacement draft was created.",
           }
         : this.state.approval;
+    if (this.state.phase === "approved") {
+      this.approvalCanonicalBinding = null;
+    }
 
     const phase =
       this.state.phase === "providers_compared"
@@ -341,9 +384,24 @@ export class DispatchStore {
     const generation = ++this.approvalGeneration;
 
     try {
+      let canonicalDraftBeforeHash: string;
+      try {
+        canonicalDraftBeforeHash = canonicalJson(draft);
+      } catch {
+        throw new DispatchDomainError(
+          "DRAFT_CHANGED_AFTER_APPROVAL",
+          "The draft cannot be represented as stable canonical data for approval.",
+        );
+      }
+      if (canonicalDraftBeforeHash !== QUALIFIED_DRAFT_CANONICAL) {
+        throw new DispatchDomainError(
+          "INVALID_INPUT",
+          "The draft no longer matches the qualified dispatch that was created.",
+        );
+      }
       const approval = await createApprovalRecord({
         draft,
-        now: this.clock.now(),
+        now: () => this.clock.now(),
         generation,
         nextId: this.nextId,
       });
@@ -358,6 +416,23 @@ export class DispatchStore {
           "The draft changed while approval was being bound.",
         );
       }
+      let canonicalDraftAfterHash: string;
+      try {
+        canonicalDraftAfterHash = canonicalJson(draft);
+      } catch {
+        throw new DispatchDomainError(
+          "DRAFT_CHANGED_AFTER_APPROVAL",
+          "The draft changed to unstable canonical data while approval was being bound.",
+        );
+      }
+      if (canonicalDraftAfterHash !== canonicalDraftBeforeHash) {
+        throw new DispatchDomainError(
+          "DRAFT_CHANGED_AFTER_APPROVAL",
+          "The draft changed during approval hash validation.",
+        );
+      }
+
+      this.approvalCanonicalBinding = canonicalJson(approval);
 
       this.update(
         {
@@ -370,21 +445,54 @@ export class DispatchStore {
       );
       return approval;
     } finally {
-      this.approvalInFlight = false;
+      if (this.approvalGeneration === generation) {
+        this.approvalInFlight = false;
+      }
     }
   }
 
   expireApprovalIfNeeded(): boolean {
     const approval = this.state.approval;
-    if (
-      this.state.phase !== "approved" ||
-      !approval ||
-      approval.status !== "approved" ||
-      !isApprovalExpired(approval, this.clock.now())
-    ) {
+    if (this.state.phase !== "approved" || !approval) {
       return false;
     }
 
+    if (!this.approvalMatchesCanonicalBinding(approval)) {
+      this.invalidateApprovalState(
+        approval,
+        "Approval record changed. Approve the exact draft again.",
+      );
+      return true;
+    }
+    if (approval.status !== "approved") {
+      return false;
+    }
+
+    const now = this.clock.now();
+    if (!hasValidApprovalWindow(approval, now)) {
+      const message =
+        "The approval record failed its exact lifetime binding check.";
+      this.approvalCanonicalBinding = null;
+      this.update(
+        {
+          phase: transitionPhase("approved", "draft_ready"),
+          approval: {
+            ...approval,
+            status: "invalidated",
+            invalidation_reason: message,
+          },
+          error_code: "CAPABILITY_NOT_AVAILABLE",
+          error_message: message,
+        },
+        [this.audit("Approval invalidated by lifetime check", "danger")],
+      );
+      return true;
+    }
+    if (!isApprovalExpired(approval, now)) {
+      return false;
+    }
+
+    this.approvalCanonicalBinding = null;
     this.update(
       {
         phase: transitionPhase("approved", "draft_ready"),
@@ -414,6 +522,7 @@ export class DispatchStore {
         "A committed dispatch cannot be changed.",
       );
     }
+    this.expireApprovalIfNeeded();
 
     const draft = { ...this.state.draft, ...patch };
     const wasApproved =
@@ -427,6 +536,9 @@ export class DispatchStore {
             invalidation_reason: "The exact draft changed after approval.",
           }
         : this.state.approval;
+    if (wasApproved) {
+      this.approvalCanonicalBinding = null;
+    }
 
     this.update(
       {
@@ -450,7 +562,9 @@ export class DispatchStore {
   async commitApprovedDispatch(
     approvalId: string,
     registeredGeneration: number,
+    executionSignal?: AbortSignal,
   ) {
+    throwIfExecutionAborted(executionSignal);
     let approval = this.state.approval;
 
     if (!approval) {
@@ -458,6 +572,23 @@ export class DispatchStore {
         "APPROVAL_NOT_FOUND",
         "No approval exists for this dispatch.",
       );
+    }
+    let canonicalApprovalBeforeHash = "";
+    if (this.state.phase === "approved") {
+      try {
+        canonicalApprovalBeforeHash = canonicalJson(approval);
+      } catch {
+        this.invalidateApprovalIntegrity(
+          approval,
+          "The approval record cannot be represented as stable canonical data.",
+        );
+      }
+      if (canonicalApprovalBeforeHash !== this.approvalCanonicalBinding) {
+        this.invalidateApprovalIntegrity(
+          approval,
+          "The approval record no longer matches the exact human approval.",
+        );
+      }
     }
     if (approval.approval_id !== approvalId) {
       throw new DispatchDomainError(
@@ -502,9 +633,20 @@ export class DispatchStore {
       );
     }
     if (!this.state.draft) {
-      throw new DispatchDomainError(
-        "DRAFT_CHANGED_AFTER_APPROVAL",
+      this.invalidateApprovalIntegrity(
+        approval,
         "The approved draft no longer exists.",
+        "DRAFT_CHANGED_AFTER_APPROVAL",
+      );
+    }
+    if (
+      approval.draft_id !== this.state.draft.draft_id ||
+      approval.idempotency_key !==
+        `dispatch:${approval.draft_id}:${approval.one_time_nonce}`
+    ) {
+      this.invalidateApprovalIntegrity(
+        approval,
+        "The approval record failed its one-time nonce binding check.",
       );
     }
     if (this.state.committed_dispatch) {
@@ -522,7 +664,18 @@ export class DispatchStore {
 
     const draft = this.state.draft;
     const revision = this.state.revision;
+    let canonicalDraftBeforeHash: string;
+    try {
+      canonicalDraftBeforeHash = canonicalJson(draft);
+    } catch {
+      this.invalidateApprovalIntegrity(
+        approval,
+        "The current draft cannot be represented as stable canonical data.",
+        "DRAFT_CHANGED_AFTER_APPROVAL",
+      );
+    }
     const currentHash = await sha256Hex(draft);
+    throwIfExecutionAborted(executionSignal);
     const currentApproval = this.state.approval;
 
     if (
@@ -532,26 +685,75 @@ export class DispatchStore {
       !currentApproval ||
       currentApproval.generation !== registeredGeneration
     ) {
+      if (currentApproval?.status === "used" || currentApproval?.used_at) {
+        throw new DispatchDomainError(
+          "APPROVAL_ALREADY_USED",
+          "This one-time approval was consumed during validation.",
+        );
+      }
       throw new DispatchDomainError(
         "DRAFT_CHANGED_AFTER_APPROVAL",
         "The dispatch changed during commit validation.",
       );
     }
-    if (currentHash !== currentApproval.draft_hash) {
-      throw new DispatchDomainError(
-        "DRAFT_CHANGED_AFTER_APPROVAL",
-        "The current draft hash does not match the approved hash.",
+    let canonicalApprovalAfterHash: string;
+    try {
+      canonicalApprovalAfterHash = canonicalJson(currentApproval);
+    } catch {
+      this.invalidateApprovalIntegrity(
+        currentApproval,
+        "The approval record changed to unstable canonical data during validation.",
       );
     }
-    if (isApprovalExpired(currentApproval, this.clock.now())) {
+    if (
+      canonicalApprovalAfterHash !== canonicalApprovalBeforeHash ||
+      canonicalApprovalAfterHash !== this.approvalCanonicalBinding
+    ) {
+      this.invalidateApprovalIntegrity(
+        currentApproval,
+        "The approval record changed during commit validation.",
+      );
+    }
+    let canonicalDraftAfterHash: string;
+    try {
+      canonicalDraftAfterHash = canonicalJson(draft);
+    } catch {
+      this.invalidateApprovalIntegrity(
+        currentApproval,
+        "The current draft changed to unstable canonical data during validation.",
+        "DRAFT_CHANGED_AFTER_APPROVAL",
+      );
+    }
+    if (canonicalDraftAfterHash !== canonicalDraftBeforeHash) {
+      this.invalidateApprovalIntegrity(
+        currentApproval,
+        "The current draft changed during hash validation.",
+        "DRAFT_CHANGED_AFTER_APPROVAL",
+      );
+    }
+    if (currentHash !== currentApproval.draft_hash) {
+      this.invalidateApprovalIntegrity(
+        currentApproval,
+        "The current draft hash does not match the approved hash.",
+        "DRAFT_CHANGED_AFTER_APPROVAL",
+      );
+    }
+    const consumptionNow = this.clock.now();
+    if (!hasValidApprovalWindow(currentApproval, consumptionNow)) {
+      this.invalidateApprovalIntegrity(
+        currentApproval,
+        "The approval record failed its exact lifetime binding check.",
+      );
+    }
+    if (isApprovalExpired(currentApproval, consumptionNow)) {
       this.expireApprovalIfNeeded();
       throw new DispatchDomainError(
         "APPROVAL_EXPIRED",
-        "This approval expired during validation.",
+        "This approval expired during commit validation.",
       );
     }
 
-    const committedAt = new Date(this.clock.now()).toISOString();
+    const committedAt = new Date(consumptionNow).toISOString();
     const committedDispatch = {
       dispatch_id: `dispatch-${draft.draft_id.toLowerCase()}`,
       draft,
@@ -573,13 +775,77 @@ export class DispatchStore {
         error_code: null,
         error_message: null,
       },
-      [this.audit("Agent committed approved dispatch", "success")],
+      [this.audit("Approved dispatch committed through tool", "success")],
     );
 
     return committedDispatch;
   }
 
+  private invalidateApprovalIntegrity(
+    approval: ApprovalRecord,
+    message: string,
+    code: DomainErrorCode = "CAPABILITY_NOT_AVAILABLE",
+  ): never {
+    this.invalidateApprovalState(approval, message, code);
+    throw new DispatchDomainError(code, message);
+  }
+
+  private approvalMatchesCanonicalBinding(approval: ApprovalRecord): boolean {
+    try {
+      return canonicalJson(approval) === this.approvalCanonicalBinding;
+    } catch {
+      return false;
+    }
+  }
+
+  private invalidateApprovalState(
+    approval: ApprovalRecord,
+    message: string,
+    code: DomainErrorCode = "CAPABILITY_NOT_AVAILABLE",
+  ): void {
+    if (this.state.phase === "approved" && this.state.approval === approval) {
+      const canonicalBinding = this.approvalCanonicalBinding;
+      this.approvalCanonicalBinding = null;
+      let invalidatedApproval: ApprovalRecord;
+      try {
+        if (canonicalBinding === null) throw new TypeError("Missing binding.");
+        invalidatedApproval = {
+          ...(JSON.parse(canonicalBinding) as ApprovalRecord),
+          status: "invalidated",
+          invalidation_reason: message,
+        };
+      } catch {
+        const invalidatedAt = new Date(this.clock.now()).toISOString();
+        invalidatedApproval = {
+          approval_id: "approval-invalidated",
+          draft_id: "D-invalidated",
+          draft_hash: "",
+          approved_at: invalidatedAt,
+          expires_at: invalidatedAt,
+          one_time_nonce: "",
+          idempotency_key: "",
+          used_at: null,
+          generation: this.approvalGeneration,
+          status: "invalidated",
+          invalidation_reason: message,
+        };
+      }
+      this.update(
+        {
+          phase: transitionPhase("approved", "draft_ready"),
+          approval: invalidatedApproval,
+          error_code: code,
+          error_message: message,
+        },
+        [this.audit("Approval invalidated by integrity check", "danger")],
+      );
+    }
+  }
+
   markTemporaryCapabilityRegistered(generation: number): void {
+    if (this.expireApprovalIfNeeded()) {
+      return;
+    }
     const approval = this.state.approval;
     if (
       this.state.phase !== "approved" ||
@@ -600,10 +866,10 @@ export class DispatchStore {
     generation: number,
     reason: "used" | "expired" | "changed" | "reset",
   ): void {
-    if (this.revokedGenerations.has(generation)) {
+    if (generation <= this.latestRevokedGeneration) {
       return;
     }
-    this.revokedGenerations.add(generation);
+    this.latestRevokedGeneration = generation;
     const label =
       reason === "used"
         ? "Temporary capability revoked after one exact action"
@@ -619,6 +885,9 @@ export class DispatchStore {
     generation: number,
     message: string,
   ): void {
+    if (this.expireApprovalIfNeeded()) {
+      return;
+    }
     const approval = this.state.approval;
     if (
       this.state.phase !== "approved" ||
@@ -643,16 +912,84 @@ export class DispatchStore {
     );
   }
 
+  recordCapabilityLifecycleFailure(message: string): number {
+    const duplicateMessage =
+      this.state.error_code === "CAPABILITY_NOT_AVAILABLE" &&
+      this.state.error_message === message &&
+      this.activeLifecycleFailureToken !== null;
+    const token = ++this.lifecycleFailureSequence;
+    this.update(
+      {
+        error_code: "CAPABILITY_NOT_AVAILABLE",
+        error_message: message,
+      },
+      duplicateMessage
+        ? []
+        : [
+            this.audit(
+              "WebMCP capability lifecycle verification failed",
+              "danger",
+            ),
+          ],
+      token,
+    );
+    return token;
+  }
+
+  getActiveCapabilityLifecycleFailureToken(): number | null {
+    return this.activeLifecycleFailureToken;
+  }
+
+  markCapabilityLifecycleFailureRecoverable(token: number | null): boolean {
+    if (
+      token === null ||
+      token !== this.activeLifecycleFailureToken ||
+      this.state.error_code !== "CAPABILITY_NOT_AVAILABLE"
+    ) {
+      return false;
+    }
+    this.recoverableLifecycleFailureToken = token;
+    return true;
+  }
+
+  getRecoverableCapabilityLifecycleFailureToken(): number | null {
+    return this.recoverableLifecycleFailureToken;
+  }
+
+  clearCapabilityLifecycleFailure(token: number | null): boolean {
+    if (
+      token === null ||
+      token !== this.activeLifecycleFailureToken ||
+      token !== this.recoverableLifecycleFailureToken ||
+      this.state.error_code !== "CAPABILITY_NOT_AVAILABLE"
+    ) {
+      return false;
+    }
+    this.update(
+      { error_code: null, error_message: null },
+      [this.audit("WebMCP capability lifecycle recovered", "capability")],
+    );
+    return true;
+  }
+
   reset(): void {
     this.approvalGeneration += 1;
     this.approvalInFlight = false;
+    this.approvalCanonicalBinding = null;
+    this.activeLifecycleFailureToken = null;
+    this.recoverableLifecycleFailureToken = null;
     this.usedIdempotencyKeys.clear();
     this.state = createInitialState(this.state.revision + 1);
     this.emit();
   }
 
   getRemainingApprovalSeconds(): number {
+    if (
+      this.state.approval &&
+      !this.approvalMatchesCanonicalBinding(this.state.approval)
+    ) {
+      return 0;
+    }
     return remainingApprovalSeconds(this.state.approval, this.clock.now());
   }
 }
-

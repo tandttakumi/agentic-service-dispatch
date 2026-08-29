@@ -59,8 +59,12 @@ export interface WebMcpToolResult<T> {
 }
 
 export function toolResult<T>(value: T): WebMcpToolResult<T> {
+  const text = JSON.stringify(value);
+  if (text === undefined) {
+    throw new TypeError("WebMCP tool results must be JSON-serializable.");
+  }
   return {
-    content: [{ type: "text", text: JSON.stringify(value) }],
-    structuredContent: value,
+    content: [{ type: "text", text }],
+    structuredContent: JSON.parse(text) as T,
   };
 }

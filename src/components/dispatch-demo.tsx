@@ -12,6 +12,7 @@ import { DispatchStore } from "@/lib/domain/dispatch-machine";
 import { DispatchDomainError } from "@/lib/domain/types";
 import { getNativeWebMcpAdapter } from "@/lib/webmcp/native-adapter";
 import {
+  BASE_TOOL_NAMES,
   COMMIT_TOOL_NAME,
   ToolRegistry,
   executeToolSequence,
@@ -23,7 +24,7 @@ import { CapabilityPanel } from "./capability-panel";
 import { ProviderComparison } from "./provider-comparison";
 
 const DEMO_PROMPT =
-  "Find a qualified detailer for this vehicle, available before Friday, under ¥60,000. Check its previous service history and draft the job. Don't submit anything until I approve.";
+  "Find a qualified detailer for this vehicle who can complete the job before Friday for under ¥60,000. Check its previous service history and draft the job. Don't submit anything until I approve.";
 
 interface DispatchDemoProps {
   adapterFactory?: () => WebMcpAdapter | null;
@@ -31,14 +32,157 @@ interface DispatchDemoProps {
 }
 
 type Availability = "checking" | "unavailable" | "native" | "test" | "error";
+type RuntimeAction =
+  | "startup"
+  | "run"
+  | "approve"
+  | "commit"
+  | "reset"
+  | "copy";
+
+interface RuntimeFailure {
+  action: RuntimeAction;
+  code: string;
+  message: string;
+}
+
+interface AlertPresentation {
+  code: string;
+  headline: string;
+  message: string;
+}
 
 function formatYen(value: number): string {
   return new Intl.NumberFormat("en-US").format(value);
 }
 
-function useCapabilities(adapter: WebMcpAdapter | null) {
+const REGISTRY_SHAPE_ERROR =
+  "Unexpected WebMCP registry shape. Authority actions are disabled.";
+const SHAPE_RETRY_DELAYS_MS = [25, 50] as const;
+
+function runtimeFailure(
+  action: RuntimeAction,
+  cause: unknown,
+  fallback: string,
+): RuntimeFailure {
+  return {
+    action,
+    code:
+      cause instanceof DispatchDomainError ? cause.code : "RUNTIME_ERROR",
+    message: cause instanceof Error ? cause.message : fallback,
+  };
+}
+
+function presentAlert(
+  failure: RuntimeFailure | null,
+  phase: string,
+  stateCode: string | null,
+  stateMessage: string | null,
+): AlertPresentation | null {
+  const code = failure?.code ?? stateCode;
+  const message = failure?.message ?? stateMessage;
+  if (!code || !message) {
+    return null;
+  }
+
+  if (phase === "committed" && failure?.action === "commit") {
+    return {
+      code,
+      headline: "Commit succeeded — verify the registry",
+      message: `The domain committed, but the browser call reported an error. Confirm the registry returned to five; otherwise stop and Reset. ${message}`,
+    };
+  }
+  if (
+    phase === "committed" &&
+    !failure &&
+    code === "CAPABILITY_NOT_AVAILABLE"
+  ) {
+    return {
+      code,
+      headline: "Commit succeeded — revocation unverified",
+      message: `Stop and Reset before continuing. ${message}`,
+    };
+  }
+  if (failure?.action === "commit") {
+    return {
+      code,
+      headline: "Commit blocked",
+      message: `${message} The page did not confirm a commit; verify the registry before retrying.`,
+    };
+  }
+  if (failure?.action === "startup") {
+    return { code, headline: "WebMCP unavailable", message };
+  }
+  if (failure?.action === "reset") {
+    return {
+      code,
+      headline: "Reset did not settle",
+      message: `${message} Stop before continuing.`,
+    };
+  }
+  if (failure?.action === "run") {
+    return {
+      code,
+      headline: "Preparation stopped",
+      message: `${message} Reset before running the full sequence again.`,
+    };
+  }
+  if (failure?.action === "approve") {
+    return {
+      code,
+      headline: "Approval blocked",
+      message: `${message} Do not assume tool 06 exists; verify the registry before retrying.`,
+    };
+  }
+  if (failure?.action === "copy") {
+    return { code, headline: "Copy failed", message };
+  }
+  if (code === "CAPABILITY_NOT_AVAILABLE") {
+    return {
+      code,
+      headline: "Commit authority blocked",
+      message: `${message} Reset and retry only after the registry is healthy.`,
+    };
+  }
+  if (code === "APPROVAL_EXPIRED") {
+    return { code, headline: "Approval expired", message };
+  }
+  if (code === "DRAFT_CHANGED_AFTER_APPROVAL") {
+    return {
+      code,
+      headline: "Approval revoked",
+      message: `${message} Review the exact draft and approve again.`,
+    };
+  }
+  return { code, headline: "Action blocked", message };
+}
+
+function hasExpectedCapabilityShape(
+  tools: RegisteredTool[],
+  expectTemporary: boolean,
+): boolean {
+  const names = new Set(tools.map((tool) => tool.name));
+  const expectedCount = BASE_TOOL_NAMES.length + (expectTemporary ? 1 : 0);
+  return (
+    tools.length === expectedCount &&
+    names.size === tools.length &&
+    BASE_TOOL_NAMES.every((name) => names.has(name)) &&
+    names.has(COMMIT_TOOL_NAME) === expectTemporary
+  );
+}
+
+function useCapabilities(
+  adapter: WebMcpAdapter | null,
+  expectTemporary: boolean,
+  refreshKey: number,
+) {
   const [tools, setTools] = useState<RegisteredTool[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [hasSnapshot, setHasSnapshot] = useState(false);
+  const capabilityReadRef = useRef<{
+    adapter: WebMcpAdapter;
+    promise: Promise<RegisteredTool[]>;
+  } | null>(null);
 
   useEffect(() => {
     if (!adapter) {
@@ -46,38 +190,150 @@ function useCapabilities(adapter: WebMcpAdapter | null) {
     }
 
     let active = true;
+    let mounted = true;
     let refreshGeneration = 0;
-    const refresh = async () => {
+    let retryTimer: number | null = null;
+    let readInFlight = false;
+    let trailingAttempt: number | null = null;
+
+    const readCapabilities = (): Promise<RegisteredTool[]> => {
+      const current = capabilityReadRef.current;
+      if (current?.adapter === adapter) {
+        return current.promise;
+      }
+
+      const promise = Promise.resolve().then(() => adapter.getTools());
+      const entry = { adapter, promise };
+      capabilityReadRef.current = entry;
+      const release = () => {
+        if (capabilityReadRef.current === entry) {
+          capabilityReadRef.current = null;
+        }
+      };
+      void promise.then(release, release);
+      return promise;
+    };
+
+    const runRefresh = async (attempt = 0) => {
+      readInFlight = true;
       const generation = ++refreshGeneration;
       try {
-        const next = await adapter.getTools();
+        const next = await readCapabilities();
         if (active && generation === refreshGeneration) {
-          setTools(next);
-          setError(null);
+          if (hasExpectedCapabilityShape(next, expectTemporary)) {
+            setTools(next);
+            setError(null);
+            setHasSnapshot(true);
+          } else {
+            setTools([]);
+            setHasSnapshot(false);
+            const delay = SHAPE_RETRY_DELAYS_MS[attempt];
+            if (delay === undefined) {
+              setError(REGISTRY_SHAPE_ERROR);
+            } else {
+              setError(null);
+              retryTimer = window.setTimeout(() => {
+                retryTimer = null;
+                requestRefresh(attempt + 1);
+              }, delay);
+            }
+          }
         }
       } catch (cause) {
         if (active && generation === refreshGeneration) {
+          setTools([]);
+          setHasSnapshot(false);
           setError(
             cause instanceof Error
               ? cause.message
               : "Could not read the WebMCP tool surface.",
           );
+          if (attempt < 2) {
+            retryTimer = window.setTimeout(() => {
+              retryTimer = null;
+              requestRefresh(attempt + 1);
+            }, 250 * (attempt + 1));
+          }
+        }
+      } finally {
+        readInFlight = false;
+        if (active && trailingAttempt !== null) {
+          const nextAttempt = trailingAttempt;
+          trailingAttempt = null;
+          if (retryTimer !== null) {
+            window.clearTimeout(retryTimer);
+            retryTimer = null;
+          }
+          requestRefresh(nextAttempt);
         }
       }
     };
+    const requestRefresh = (attempt = 0) => {
+      if (!active) {
+        return;
+      }
+      if (retryTimer !== null) {
+        window.clearTimeout(retryTimer);
+        retryTimer = null;
+      }
+      if (readInFlight) {
+        trailingAttempt =
+          trailingAttempt === null
+            ? attempt
+            : Math.min(trailingAttempt, attempt);
+        return;
+      }
+      void runRefresh(attempt);
+    };
     const onToolChange: EventListener = () => {
-      void refresh();
+      if (!active) {
+        return;
+      }
+      requestRefresh();
     };
 
-    adapter.addEventListener("toolchange", onToolChange);
-    void refresh();
+    try {
+      adapter.addEventListener("toolchange", onToolChange);
+    } catch (cause) {
+      active = false;
+      const message =
+        cause instanceof Error
+          ? cause.message
+          : "Could not subscribe to WebMCP tool changes.";
+      queueMicrotask(() => {
+        if (!mounted) {
+          return;
+        }
+        setTools([]);
+        setHasSnapshot(false);
+        setError(message);
+      });
+      return () => {
+        mounted = false;
+        try {
+          adapter.removeEventListener("toolchange", onToolChange);
+        } catch {
+          // A partial experimental subscription may also reject cleanup.
+        }
+      };
+    }
+    requestRefresh();
     return () => {
       active = false;
-      adapter.removeEventListener("toolchange", onToolChange);
+      mounted = false;
+      trailingAttempt = null;
+      if (retryTimer !== null) {
+        window.clearTimeout(retryTimer);
+      }
+      try {
+        adapter.removeEventListener("toolchange", onToolChange);
+      } catch {
+        // Experimental cleanup failures must not escape React unmount.
+      }
     };
-  }, [adapter]);
+  }, [adapter, expectTemporary, refreshKey]);
 
-  return { tools, error };
+  return { tools, error, hasSnapshot };
 }
 
 export function DispatchDemo({
@@ -108,11 +364,22 @@ export function DispatchDemo({
   const actionInFlightRef = useRef(false);
   const [availability, setAvailability] =
     useState<Availability>("checking");
-  const [runtimeError, setRuntimeError] = useState<string | null>(null);
+  const [runtimeError, setRuntimeError] = useState<RuntimeFailure | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
-  const { tools, error: capabilityError } = useCapabilities(adapter);
+  const [capabilityRefreshKey, setCapabilityRefreshKey] = useState(0);
+  const expectsTemporaryCapability =
+    state.phase === "approved" && state.approval?.status === "approved";
+  const {
+    tools,
+    error: capabilityError,
+    hasSnapshot: hasCapabilitySnapshot,
+  } = useCapabilities(
+    adapter,
+    expectsTemporaryCapability,
+    capabilityRefreshKey,
+  );
 
   useEffect(() => {
     if (!adapter || !registry) {
@@ -132,14 +399,17 @@ export function DispatchDemo({
           adapter.kind === "test" || window.__WEBMCP_TEST_MODE__ === true;
         setAvailability(isInjectedTest ? "test" : "native");
         setRuntimeError(null);
+        setCapabilityRefreshKey((key) => key + 1);
       })
       .catch((cause) => {
         if (!active) return;
         setAvailability("error");
         setRuntimeError(
-          cause instanceof Error
-            ? cause.message
-            : "WebMCP registration failed.",
+          runtimeFailure(
+            "startup",
+            cause,
+            "WebMCP registration failed.",
+          ),
         );
       });
 
@@ -174,7 +444,10 @@ export function DispatchDemo({
     [],
   );
 
-  const withAction = async (name: string, action: () => Promise<void>) => {
+  const withAction = async (
+    name: RuntimeAction,
+    action: () => Promise<void>,
+  ) => {
     if (actionInFlightRef.current) {
       return;
     }
@@ -184,13 +457,9 @@ export function DispatchDemo({
     try {
       await action();
     } catch (cause) {
-      const message =
-        cause instanceof DispatchDomainError
-          ? `${cause.code}: ${cause.message}`
-          : cause instanceof Error
-            ? cause.message
-            : "The requested action failed.";
-      setRuntimeError(message);
+      setRuntimeError(
+        runtimeFailure(name, cause, "The requested action failed."),
+      );
     } finally {
       actionInFlightRef.current = false;
       setBusyAction(null);
@@ -230,31 +499,83 @@ export function DispatchDemo({
       } else {
         store.reset();
       }
+      setCapabilityRefreshKey((key) => key + 1);
       setRemainingSeconds(0);
     });
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(DEMO_PROMPT);
-    } catch {
-      const textArea = document.createElement("textarea");
-      textArea.value = DEMO_PROMPT;
-      textArea.setAttribute("readonly", "");
-      textArea.style.position = "fixed";
-      textArea.style.opacity = "0";
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      textArea.remove();
+      try {
+        await navigator.clipboard.writeText(DEMO_PROMPT);
+      } catch {
+        const textArea = document.createElement("textarea");
+        textArea.value = DEMO_PROMPT;
+        textArea.setAttribute("readonly", "");
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        try {
+          textArea.select();
+          if (!document.execCommand("copy")) {
+            throw new Error("The demo prompt could not be copied.");
+          }
+        } finally {
+          textArea.remove();
+        }
+      }
+    } catch (cause) {
+      setCopied(false);
+      setRuntimeError(
+        runtimeFailure(
+          "copy",
+          cause,
+          "The demo prompt could not be copied.",
+        ),
+      );
+      return;
     }
+    setRuntimeError(null);
     setCopied(true);
     if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
     copyTimerRef.current = setTimeout(() => setCopied(false), 1_500);
   };
 
   const toolNames = new Set(tools.map((tool) => tool.name));
-  const commitAvailable = toolNames.has(COMMIT_TOOL_NAME);
   const isWebMcpReady = availability === "native" || availability === "test";
+  const commitVisible = toolNames.has(COMMIT_TOOL_NAME);
+  const expectedCount =
+    BASE_TOOL_NAMES.length + (expectsTemporaryCapability ? 1 : 0);
+  const registryShapeValid =
+    tools.length === expectedCount &&
+    toolNames.size === tools.length &&
+    BASE_TOOL_NAMES.every((name) => toolNames.has(name)) &&
+    commitVisible === expectsTemporaryCapability;
+  const registryShapeError =
+    isWebMcpReady &&
+    hasCapabilitySnapshot &&
+    capabilityError === null &&
+    !registryShapeValid
+      ? REGISTRY_SHAPE_ERROR
+      : null;
+  const alert = presentAlert(
+    runtimeError,
+    state.phase,
+    state.error_code,
+    state.error_message,
+  );
+  const registryVerified =
+    isWebMcpReady &&
+    hasCapabilitySnapshot &&
+    capabilityError === null &&
+    registryShapeError === null;
+  const commitAvailable = registryVerified && commitVisible;
+  const lifecycleStep = !registryVerified
+    ? null
+    : commitAvailable
+      ? "approve"
+      : state.phase === "committed"
+        ? "consume"
+        : "prepare";
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -268,10 +589,34 @@ export function DispatchDemo({
           </div>
         </div>
 
-        <p className="thesis">
-          Approval changes what the agent can do
-          <span>—not merely what it is told to do.</span>
-        </p>
+        <div
+          className="thesis"
+          aria-label="Capability lifecycle: 5 prepare, 6 approve, 5 consume"
+        >
+          <p>Approval creates the sixth tool. One use removes it.</p>
+          <ol className="lifecycle-rail">
+            <li
+              className={lifecycleStep === "prepare" ? "is-current" : ""}
+              aria-current={lifecycleStep === "prepare" ? "step" : undefined}
+            >
+              <strong>5</strong><span>PREPARE</span>
+            </li>
+            <li aria-hidden="true">→</li>
+            <li
+              className={lifecycleStep === "approve" ? "is-current" : ""}
+              aria-current={lifecycleStep === "approve" ? "step" : undefined}
+            >
+              <strong>6</strong><span>APPROVE</span>
+            </li>
+            <li aria-hidden="true">→</li>
+            <li
+              className={lifecycleStep === "consume" ? "is-current" : ""}
+              aria-current={lifecycleStep === "consume" ? "step" : undefined}
+            >
+              <strong>5</strong><span>CONSUME</span>
+            </li>
+          </ol>
+        </div>
 
         <div className="header-actions">
           <span
@@ -304,8 +649,8 @@ export function DispatchDemo({
         <div className="prompt-label">
           <span aria-hidden="true">›_</span>
           <div>
-            <p id="prompt-heading">Deterministic WebMCP runner</p>
-            <span>CALLS LIVE TOOLS · 5 PREPARE → 6 APPROVE → 5 CONSUME</span>
+            <p id="prompt-heading">Live WebMCP runner</p>
+            <span>DETERMINISTIC · INVOKES REGISTERED TOOLS</span>
           </div>
         </div>
         <blockquote>{DEMO_PROMPT}</blockquote>
@@ -322,7 +667,7 @@ export function DispatchDemo({
             className="button button-primary"
             onClick={() => void handleRunAgent()}
             disabled={
-              !isWebMcpReady ||
+              !registryVerified ||
               state.phase !== "idle" ||
               busyAction !== null
             }
@@ -477,13 +822,13 @@ export function DispatchDemo({
                   {state.phase === "draft_ready" ? (
                     <>
                       <p>
-                        No write capability is registered. Approval will create
+                        No commit capability is registered. Approval will create
                         one for this hash only.
                       </p>
                       <button
                         className="button button-approve"
                         onClick={() => void handleApprove()}
-                        disabled={busyAction !== null}
+                        disabled={!registryVerified || busyAction !== null}
                         type="button"
                       >
                         {busyAction === "approve"
@@ -497,7 +842,10 @@ export function DispatchDemo({
                     <>
                       <p className="approval-live">
                         <span aria-hidden="true" />
-                        Human approval active · expires in{" "}
+                        {commitAvailable
+                          ? "Approval created tool 06"
+                          : "Approval bound · tool 06 not yet verified"}{" "}
+                        · expires in{" "}
                         <strong>{remainingSeconds}s</strong>
                       </p>
                       <button
@@ -519,10 +867,11 @@ export function DispatchDemo({
                     <div className="committed-result" role="status">
                       <span aria-hidden="true">✓</span>
                       <div>
-                        <strong>Dispatch committed once</strong>
+                        <strong>One exact action committed</strong>
                         <p>
-                          {state.committed_dispatch.dispatch_id} · temporary
-                          capability revoked
+                          {state.committed_dispatch.dispatch_id} · {registryVerified && !commitVisible
+                            ? "temporary capability revoked"
+                            : "revocation pending verification"}
                         </p>
                       </div>
                     </div>
@@ -540,28 +889,36 @@ export function DispatchDemo({
             approval={state.approval}
             phase={state.phase}
             remainingSeconds={remainingSeconds}
+            hasSnapshot={hasCapabilitySnapshot}
             error={capabilityError}
+            shapeError={registryShapeError}
           />
           <AuditLog entries={state.audit_log} />
         </aside>
       </div>
 
-      {(runtimeError || state.error_message) && (
+      {alert && (
         <div className="global-alert" role="alert">
-          <strong>{state.error_code ?? "RUNTIME_ERROR"}</strong>
-          <span>{runtimeError ?? state.error_message}</span>
-          <button
-            type="button"
-            onClick={() => setRuntimeError(null)}
-            aria-label="Dismiss error"
-          >
-            Dismiss
-          </button>
+          <div className="global-alert-heading">
+            <strong>{alert.headline}</strong>
+            <span className="global-alert-code">{alert.code}</span>
+          </div>
+          <span className="global-alert-message">{alert.message}</span>
+          {runtimeError ? (
+            <button
+              type="button"
+              onClick={() => setRuntimeError(null)}
+              aria-label="Dismiss error"
+            >
+              Dismiss
+            </button>
+          ) : null}
         </div>
       )}
 
       <p className="data-notice">
-        Fictional vehicle, companies, history, pricing, and dispatch only.
+        Frozen Aug 27, 2026 scenario · fictional vehicle, companies, history,
+        pricing, and dispatch.
       </p>
     </main>
   );

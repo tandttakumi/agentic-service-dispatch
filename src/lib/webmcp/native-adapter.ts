@@ -5,6 +5,8 @@ import type {
   WebMcpAdapter,
 } from "./types";
 
+const NATIVE_GET_TOOLS_TIMEOUT_MS = 1_000;
+
 export class NativeWebMcpAdapter implements WebMcpAdapter {
   readonly kind = "native" as const;
 
@@ -21,7 +23,40 @@ export class NativeWebMcpAdapter implements WebMcpAdapter {
   }
 
   async getTools(): Promise<RegisteredTool[]> {
-    return (await this.context.getTools()) as RegisteredTool[];
+    let timeout: ReturnType<typeof globalThis.setTimeout> | null = null;
+    let tools: unknown;
+    try {
+      tools = await Promise.race([
+        this.context.getTools(),
+        new Promise<never>((_resolve, reject) => {
+          timeout = globalThis.setTimeout(
+            () => reject(new Error("Native WebMCP getTools() timed out.")),
+            NATIVE_GET_TOOLS_TIMEOUT_MS,
+          );
+        }),
+      ]);
+    } finally {
+      if (timeout !== null) {
+        globalThis.clearTimeout(timeout);
+      }
+    }
+    if (!Array.isArray(tools)) {
+      throw new TypeError("Native WebMCP getTools() must return a tool array.");
+    }
+    if (
+      tools.some(
+        (tool) =>
+          tool === null ||
+          typeof tool !== "object" ||
+          typeof (tool as { name?: unknown }).name !== "string" ||
+          (tool as { name: string }).name.length === 0,
+      )
+    ) {
+      throw new TypeError(
+        "Native WebMCP getTools() must return named tool records.",
+      );
+    }
+    return tools as RegisteredTool[];
   }
 
   executeTool(
@@ -55,6 +90,20 @@ export class NativeWebMcpAdapter implements WebMcpAdapter {
 export function getNativeWebMcpAdapter(
   targetDocument: Document = document,
 ): NativeWebMcpAdapter | null {
-  const context = targetDocument.modelContext;
-  return context ? new NativeWebMcpAdapter(context) : null;
+  try {
+    const context = targetDocument.modelContext;
+    if (
+      !context ||
+      typeof context.registerTool !== "function" ||
+      typeof context.getTools !== "function" ||
+      typeof context.executeTool !== "function" ||
+      typeof context.addEventListener !== "function" ||
+      typeof context.removeEventListener !== "function"
+    ) {
+      return null;
+    }
+    return new NativeWebMcpAdapter(context);
+  } catch {
+    return null;
+  }
 }

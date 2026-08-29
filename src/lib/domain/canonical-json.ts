@@ -21,8 +21,35 @@ function normalizeJson(value: unknown, seen: WeakSet<object>): JsonValue {
     if (seen.has(value)) {
       throw new TypeError("Canonical JSON does not support circular values.");
     }
+    if (Object.getPrototypeOf(value) !== Array.prototype) {
+      throw new TypeError("Canonical JSON supports only plain arrays.");
+    }
+    const lengthDescriptor = Object.getOwnPropertyDescriptor(value, "length");
+    if (!lengthDescriptor || !("value" in lengthDescriptor)) {
+      throw new TypeError("Canonical JSON supports only plain arrays.");
+    }
+    const length = lengthDescriptor.value as number;
+    const ownNames = Object.getOwnPropertyNames(value);
+    if (Object.getOwnPropertySymbols(value).length > 0) {
+      throw new TypeError("Canonical JSON supports only plain arrays.");
+    }
     seen.add(value);
-    const normalized = value.map((item) => normalizeJson(item, seen));
+    const normalized: JsonValue[] = [];
+    for (let index = 0; index < length; index += 1) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, index);
+      if (!descriptor) {
+        throw new TypeError("Canonical JSON does not support sparse arrays.");
+      }
+      if (!("value" in descriptor)) {
+        throw new TypeError(
+          `Canonical JSON supports only data index "${index}".`,
+        );
+      }
+      normalized.push(normalizeJson(descriptor.value, seen));
+    }
+    if (ownNames.length !== length + 1) {
+      throw new TypeError("Canonical JSON supports only plain arrays.");
+    }
     seen.delete(value);
     return normalized;
   }
@@ -31,12 +58,28 @@ function normalizeJson(value: unknown, seen: WeakSet<object>): JsonValue {
     if (seen.has(value)) {
       throw new TypeError("Canonical JSON does not support circular values.");
     }
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null) {
+      throw new TypeError("Canonical JSON supports only plain objects.");
+    }
+    if (Object.getOwnPropertySymbols(value).length > 0) {
+      throw new TypeError("Canonical JSON does not support symbol keys.");
+    }
     seen.add(value);
 
     const record = value as Record<string, unknown>;
-    const normalized: Record<string, JsonValue> = {};
-    for (const key of Object.keys(record).sort()) {
-      const item = record[key];
+    const normalized: Record<string, JsonValue> = Object.create(null) as Record<
+      string,
+      JsonValue
+    >;
+    for (const key of Object.getOwnPropertyNames(record).sort()) {
+      const descriptor = Object.getOwnPropertyDescriptor(record, key);
+      if (!descriptor || !("value" in descriptor) || !descriptor.enumerable) {
+        throw new TypeError(
+          `Canonical JSON supports only data property "${key}".`,
+        );
+      }
+      const item = descriptor.value;
       if (item === undefined || typeof item === "function" || typeof item === "symbol") {
         throw new TypeError(`Canonical JSON cannot encode property "${key}".`);
       }
@@ -65,4 +108,3 @@ export async function sha256Hex(value: unknown): Promise<string> {
     byte.toString(16).padStart(2, "0"),
   ).join("");
 }
-

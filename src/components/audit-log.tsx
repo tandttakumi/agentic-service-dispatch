@@ -13,12 +13,21 @@ export function AuditLog({ entries }: AuditLogProps) {
           <p className="eyebrow">Trace</p>
           <h2 id="audit-heading">Audit Log</h2>
         </div>
-        <span className="count-badge" aria-label={`${entries.length} audit events`}>
+        <span
+          className="count-badge"
+          aria-label={`${entries.length} audit ${entries.length === 1 ? "event" : "events"}`}
+        >
           {entries.length.toString().padStart(2, "0")}
         </span>
       </div>
 
-      <ol className="audit-list" aria-live="polite" aria-relevant="additions">
+      <ol
+        aria-label="WebMCP audit events"
+        aria-live="polite"
+        aria-relevant="additions"
+        className="audit-list"
+        tabIndex={entries.length > 0 ? 0 : undefined}
+      >
         {entries.length === 0 ? (
           <li className="audit-empty">
             Tool-backed events will appear here in execution order.
@@ -38,4 +47,3 @@ export function AuditLog({ entries }: AuditLogProps) {
     </section>
   );
 }
-

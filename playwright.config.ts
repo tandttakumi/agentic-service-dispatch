@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const useProductionServer =
+  process.env.PLAYWRIGHT_SERVER_MODE === "production";
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
@@ -13,7 +16,8 @@ export default defineConfig({
   reporter: [["list"], ["html", { open: "never" }]],
   outputDir: "test-results",
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL: "http://127.0.0.1:3100",
+    permissions: ["clipboard-read", "clipboard-write"],
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "off",
@@ -28,9 +32,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev -- --hostname 127.0.0.1",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: process.env.CI !== "true",
+    command: useProductionServer
+      ? "npm run start -- --hostname 127.0.0.1 --port 3100"
+      : "npm run dev -- --hostname 127.0.0.1 --port 3100",
+    url: "http://127.0.0.1:3100",
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });

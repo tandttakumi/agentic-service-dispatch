@@ -1,18 +1,28 @@
 # Agentic Service Dispatch
 
-**A human approval changes an AI agent's real browser capability surface for one exact, time-limited action.**
+**Five page-owned WebMCP tools prepare a fictional dispatch. Human approval creates one exact commit tool; one use removes it.**
 
-This is not a dispatch-management SaaS and it is not a chat UI with an AI label. It is a focused WebMCP proof: five baseline tools can inspect a fictional service request and stage a draft, but the write capability does not exist until a human approves that exact draft. Approval makes a sixth tool appear; one successful invocation removes it.
+The live registry changes **5 PREPARE → 6 APPROVE → 5 CONSUME**. Baseline tools may inspect and draft, but `commit_approved_dispatch` does not exist until a human approves the reviewed draft.
 
-**[Live app](https://agentic-service-dispatch.vercel.app) · [Public source](https://github.com/tandttakumi/agentic-service-dispatch)**
+Approval changes capability—not prompt text.
 
-![Native Chrome evidence showing the temporary sixth WebMCP tool](artifacts/native-chrome-approved.png)
+**[Live app](https://agentic-service-dispatch.vercel.app) · [Source repository](https://github.com/tandttakumi/agentic-service-dispatch)**
+
+Final candidate source `ef35cfc` passed the human-operated native Chrome release gate on 2026-08-30. Public-v1 evidence remains separately preserved and labeled.
+
+![Final candidate application evidence showing the 5 PREPARE to 6 APPROVE to 5 CONSUME lifecycle rail and temporary sixth WebMCP tool](artifacts/final-candidate/playwright/desktop-approved.png)
+
+*FINAL CANDIDATE · TEST ADAPTER · APPLICATION EVIDENCE · NOT NATIVE.*
+
+Separate engine evidence remains preserved as the [public-v1 native Chrome approved frame](artifacts/native-chrome-approved.png) and its [four-state evidence index](artifacts/README.md); it is not relabeled as final-candidate proof. The final candidate's distinct human-operated native result is recorded in the [2026-08-30 release-gate evidence](docs/final-candidate-native-evidence.md).
 
 ## The problem
 
 Real-world service work is fragmented across customer records, prior-service notes, provider qualifications, availability, pricing, and final dispatch systems. Agents can help coordinate that work, but a prompt such as “do not submit” is only an instruction. It is not an enforceable authority boundary.
 
-Agentic Service Dispatch separates preparation from authority. An agent may gather context, compare providers, check availability, and build a draft. A human alone can create a short-lived capability to commit precisely what was reviewed.
+The workflow was abstracted from the entrant's firsthand vehicle and service-operations experience. Every company, vehicle, provider, record, price, and outcome in the demo is fictional.
+
+Agentic Service Dispatch separates preparation from authority. An agent may gather context, compare providers, check availability, and build a draft. The visible approval control—not another WebMCP tool—creates a short-lived capability to commit precisely what was reviewed.
 
 ## Why WebMCP
 
@@ -26,7 +36,7 @@ Primary references: the [WebMCP specification](https://webmachinelearning.github
 2. The five registered tools retrieve the vehicle, review history, compare providers, check availability, and create a clearly labeled **DRAFT — NOT SUBMITTED**.
 3. Before approval, `commit_approved_dispatch` is absent from `getTools()`.
 4. Select **Approve this exact dispatch**. A 120-second, hash-bound, one-time sixth tool appears.
-5. Invoke the tool once. The successful result settles across the native boundary, then the tool is revoked on the next task and confirmed absent through `getTools()`.
+5. Invoke the tool once. The successful result settles across the caller boundary, then the tool is revoked on the next task and confirmed absent through `getTools()`. This timing was verified in native Chrome for both public v1 and final candidate source `ef35cfc`.
 6. **Reset Demo** clears the domain state and restores exactly the five baseline tools.
 
 The memorable shape is **5 → 6 → 5 capabilities**.
@@ -42,13 +52,13 @@ The memorable shape is **5 → 6 → 5 capabilities**.
 | `create_dispatch_draft` | Baseline | Stages a local draft; it does not submit anything externally. |
 | `commit_approved_dispatch` | Only after approval | Commits the bound draft once, then unregisters itself. |
 
-The first four tools carry `readOnlyHint: true`. Every input schema rejects additional properties. The temporary commit schema accepts only the runtime approval ID via `const`; vehicle, provider, slot, price, scope, and rationale cannot be supplied or changed by the caller.
+The first four tools carry `readOnlyHint: true`. Every input schema rejects additional properties, and callbacks independently require non-coercing plain JSON values. The temporary commit schema accepts only the runtime approval ID via `const`; vehicle, provider, slot, price, scope, and rationale cannot be supplied or changed by the caller.
 
 ## Approval-gated capability lifecycle
 
-Approval records contain an approval ID, draft ID, canonical SHA-256 draft hash, approval and expiry timestamps, one-time nonce, idempotency key, usage timestamp, and registration generation. The domain layer revalidates all of them when the temporary tool executes. A changed draft, expired TTL, stale generation, wrong approval ID, prior use, duplicate idempotency key, or existing commit is rejected.
+Approval records contain an approval ID, draft ID, canonical SHA-256 draft hash, approval and expiry timestamps, one-time nonce, nonce-bound idempotency key, usage timestamp, and registration generation. The domain layer revalidates them and the original qualified draft when the temporary tool executes. A changed draft, expired TTL, stale generation, wrong approval ID, altered approval record, prior use, duplicate idempotency key, or existing commit is rejected. Tool results are detached from fixed fixture state before crossing the caller boundary.
 
-The capability is registered with its own `AbortController`. Commit, expiry, draft mutation, reset, cleanup, or registration failure aborts that controller. The registry then reads `getTools()` to verify the capability actually disappeared.
+The capability is registered with its own `AbortController`. Commit, expiry, draft mutation, Reset, cleanup, or registration failure aborts that controller. The callback combines that page-owned registration signal with the invocation signal through exact-surface verification and the post-digest domain cancellation check, so cleanup during validation preserves an unused approval even if the host does not abort the invocation separately. Once the temporary tool is established, commit-, expiry-, mutation-, and Reset-driven cleanup reads `getTools()` back to verify the expected surface. A canceled or failed pending registration remains fail-closed but makes no standalone physical-removal claim; UI or a later lifecycle proof must observe the registry. Unmount cleanup likewise aborts the current registration controller without claiming physical removal or a post-stop read-back; a later full remount re-verifies the surface and may reconcile an otherwise valid unconsumed approval.
 
 ## Architecture
 
@@ -58,7 +68,7 @@ See [Architecture](docs/architecture.md) and [Security model](docs/security-mode
 
 ## Security model
 
-The security boundary is enforced in domain logic, not only in button state. Approval grants no free-form write arguments: it authorizes one immutable draft hash, for 120 seconds, once. Browser confirmation can complement this pattern, but it is not a substitute for the application's exact-draft validation and one-time capability lifecycle.
+The security boundary is enforced in domain logic, not only in button state. Approval grants no free-form write arguments: it authorizes one exact draft hash, for 120 seconds, once. Changing that draft invalidates the approval. Browser confirmation can complement this pattern, but it is not a substitute for the application's exact-draft validation and one-time capability lifecycle.
 
 ## Human-in-the-loop model
 
@@ -66,22 +76,25 @@ The agent prepares evidence and a proposed decision. The human reviews the selec
 
 ## Local setup
 
-Requirements: Node.js 20.9 or newer and npm.
+Requirements: Node.js 24.15 or newer within the Node 24 line, plus npm. The checked-in `.nvmrc` pins the locally verified 24.18.0 release; `package.json#engines` plus the project `.npmrc` reject runtimes outside that lockfile-compatible range.
 
 ```bash
 npm ci
-npm run dev
+WEBMCP_DEV_PORT=3100
+npm run dev -- --hostname 127.0.0.1 --port "$WEBMCP_DEV_PORT"
 ```
 
-Open `http://127.0.0.1:3000`. No database, authentication, API key, `.env` file, AI API, or external business service is required.
+Open the local URL printed by the command. The variable is only a local run choice; the application does not fix a production port. No database, authentication, API key, `.env` file, AI API, or external business service is required.
 
 ## Browser requirements
 
-The production UI uses only native `document.modelContext`. If the API is absent, it states **Native WebMCP is unavailable in this browser** and registers no simulated tools.
+The production UI uses only native `document.modelContext`. If the API is absent, malformed, throwing, or missing a required method/event surface, it fails closed and registers no simulated tools. Native `getTools()` reads have a one-second application bound; non-settling registration or outer invocation remains an explicit engine-gate failure rather than being converted into simulated success.
 
 The official challenge rules identify ChatGPT's in-app browser and Chrome 149+ with `chrome://flags/#enable-webmcp-testing` as supported testing paths. Follow the exact [native WebMCP manual test](docs/manual-native-webmcp-test.md). Browser support remains experimental and may change with the specification.
 
-On 2026-08-27, the [public deployment](https://agentic-service-dispatch.vercel.app) completed **Run → Approve → Commit → Reset** in native Chrome **151.0.7922.174** with the testing flag enabled. The badge showed native availability, the visible `getTools()` registry changed **5 → 6 → 5**, `commit_approved_dispatch` appeared only after approval and was absent after commit, two consecutive Resets restored exactly five tools, and the captured Chrome error log was empty. Four [native Chrome screenshots](artifacts/README.md) preserve the initial, approved, committed, and reset states. This evidence is distinct from the visibly labeled automated Playwright harness below.
+On 2026-08-27, public v1 (public commit `028bba44`) completed **Run → Approve → Commit → Reset** in native Chrome **151.0.7922.174** with the testing flag enabled. The badge showed native availability, the visible `getTools()` registry changed **5 → 6 → 5**, `commit_approved_dispatch` appeared only after approval and was absent after commit, two consecutive Resets restored exactly five tools, and the captured Chrome error log was empty. Four [native Chrome screenshots](artifacts/README.md) preserve the initial, approved, committed, and reset states. The [historical verification record](docs/verification-evidence.md) identifies the tested runtime source and later publication-only changes.
+
+On 2026-08-30, the exact final candidate source `ef35cfc` and runtime/toolchain digest `abfc8f4…a4f7` completed a separate uninterrupted human-operated native Chrome **5 → 5 → 6 → 5 → Reset → 5** gate in the same Chrome version. Tool 06 was only `commit_approved_dispatch`; the operator observed no error, duplicate, stuck state, or stopped transition. The [final-candidate native evidence](docs/final-candidate-native-evidence.md) records the identity and evidence boundary without relabeling Playwright artifacts.
 
 ## Tests
 
@@ -91,43 +104,49 @@ npm run typecheck
 npm run test
 npm run test:coverage
 npm run test:e2e
+npm run test:e2e:evidence # explicit screenshot refresh only
 npm run build
 npm run verify
 ```
 
-`npm run verify` runs lint, typecheck, all unit/component tests, the production build, and Playwright E2E in sequence. Coverage thresholds target the domain and WebMCP lifecycle rather than presentational components. Playwright uses a deterministic, visibly labeled test-only `document.modelContext` harness because stock Playwright Chromium does not expose native WebMCP; production never imports that harness.
+`npm run verify` runs lint, typecheck, the coverage-gated unit/component suite, the production build, and Playwright E2E against that built application in sequence. Coverage measures executable `src` files, including the native and test adapters, while excluding framework entry files and type-only declarations; enforced statement/branch/function/line floors are 94/90/97/95%. Playwright uses a deterministic, visibly labeled test-only `document.modelContext` harness because stock Playwright Chromium does not expose native WebMCP; production never imports that harness.
 
-The browser suite covers 1440×900, 1280×720, and 390×844, verifies no horizontal overflow, focus visibility and reduced motion, exercises Copy and repeated Reset, checks the unsupported fallback, reads actual test-registry tools, proves 5 → 6 → 5, and rejects console errors, uncaught exceptions, and hydration warnings.
+The tracked GitHub Actions workflow requests only `contents: read`, uses the same `.nvmrc`, installs the locked npm dependencies and Playwright's Chromium runtime, and runs `npm run verify` serially. No remote run was used as pre-publication evidence; inspect the Actions result for the published commit separately.
 
-The 65-test unit/component/lifecycle suite also includes 100 complete 5 → 6 → 5 + Reset cycles, 100 consecutive resets, 100 start/cleanup cycles, and a seeded 256-action ordering test. These are application/adapter soak tests, not native browser conformance.
+The ten-flow browser suite covers 320, 360, 390, 768, 1024, 1280, 1440, and 1920px widths; verifies long-text wrapping, no horizontal overflow, ≥44px controls, focus visibility, reduced motion, forced-colors operation, a 200% page-scale check, screen-reader lifecycle status, and a keyboard-only lifecycle; exercises Copy and Reset across multiple flows; checks state-specific post-commit failure guidance and the unsupported fallback; reads actual test-registry tools; proves 5 → 6 → 5; and rejects console errors, uncaught exceptions, and hydration warnings.
+
+The 290-test unit/component/lifecycle suite includes 74 explicit agent-input scenarios plus one matrix-count guard, 48 race-laboratory cases, exact native-schema/deterministic-runner input alignment, mounted countdown-driven TTL expiry and revoke, the complete 6×6 phase-transition matrix and all-phase Reset postconditions, independent nonce, rollback-idempotency, and duplicate-draft retry regressions, hostile canonical-data and unavailable-crypto checks, approval-time and commit-time draft/approval mutation checks across asynchronous hashing, clock-rollback invalidation before and during commit validation, registration-signal cancellation during an in-flight commit digest and a delayed post-stop callback, a complete simulated Chrome string-schema/input bridge lifecycle, execution-time exact-registry checks, abort-aware exact-surface read and retry-delay cancellation, UI convergence across expected-surface changes, exhausted-read Reset recovery, delayed-startup recovery without `toolchange`, and `toolchange` storm coalescing, synchronous Reset authority invalidation, stale pre-Reset task rejection, registry-owner-bound lifecycle-error recovery, state-specific pre/post-commit failure presentation, 100 complete 5 → 6 → 5 + Reset cycles, 100 consecutive resets, 100 start/cleanup cycles, 40 fixed-seed normal/adversarial state-machine sweeps, and ten registered-tool order violations. Current coverage across executable `src` files is 96.02% statements, 93.67% branches, 98.64% functions, and 96.82% lines; it includes both native and test adapters and excludes framework entry files and type-only declarations. These are application/adapter tests, not native browser conformance.
 
 ## Demo reset
 
-**Reset Demo** aborts the temporary capability, invalidates the approval generation, clears timers, draft, commit, errors, and audit entries, then verifies that only the five baseline tools remain. Repeated reset is idempotent.
+**Reset Demo** synchronously invalidates approval generation and clears the local domain state. Serialized browser cleanup then aborts the temporary registration and verifies that only the five baseline tools remain; older lifecycle completions cannot write into the new idle state. Repeated reset is idempotent.
 
 ## Fictional data notice
 
-The vehicle, customer, providers, service history, pricing, availability, and dispatch records are fictional. The app contains no real customer data, trademarks, third-party logos, stock imagery, or external operational writes.
+The demo is a frozen Aug 27, 2026 scenario. Its vehicle, customer, providers, service history, pricing, availability, and dispatch records are fictional. The app contains no real customer data or service-company branding, third-party logos, stock imagery, or external operational writes.
 
 ## Known limitations
 
 - Native Chrome screenshots and a separate visibly labeled Playwright harness are both committed; only the `native-chrome-*` files are browser-engine evidence.
 - The demo persists nothing and intentionally stops at a local, fictional commit result.
 - The fixed fixtures prove the authority pattern, not provider-search breadth or production scheduling integration.
+- The callback verifies the last observed native registry surface before domain validation; WebMCP does not provide an atomic registry-snapshot-and-consume operation across the later asynchronous digest.
+- Candidate-native callback reads, successful-result settlement, and post-commit physical removal completed the 2026-08-30 primary release gate. Stop/unmount stress remains a separate manual engine check; automated adapters are not engine evidence.
+- A native `registerTool()` or outer `executeTool()` Promise that never settles can leave the mounted UI pending. The app does not impose a timeout that could misreport or retry a commit whose callback may already have run; a stuck call fails the native release gate.
 - WebMCP is an evolving draft; native browser behavior must be retested against the cited primary sources before a public demo.
 
 ## Challenge judging criteria mapping
 
 - **WebMCP Leverage:** the real tool surface changes at the human-approval boundary and is read back through `getTools()`.
-- **Execution:** strict schemas, canonical hashing, TTL, generation checks, idempotency, settlement-safe revocation, and 65 automated unit/component/lifecycle tests support a polished one-screen flow.
-- **Potential Impact:** the pattern applies to service dispatch, booking, procurement, refunds, field work, and other prepared-by-agent / authorized-by-human operations.
+- **Execution:** strict schemas and callbacks, ambiguity-rejecting canonical hashing, exact approval-window and nonce binding, idempotency, settlement-safe revocation, and 290 automated unit/component/lifecycle tests support a polished one-screen flow.
+- **Potential Impact:** field-service coordination is the grounded use case; transfer to other prepared-by-agent / authorized-by-human operations remains a hypothesis for pilots.
 - **Creativity & Ambition:** approval becomes a temporary capability object rather than prompt text or a permanently registered disabled action.
 
-See the evidence-level [Judging map](docs/judging-map.md), [fresh strict scorecard](docs/judging-scorecard.md), [current compliance matrix](docs/current-compliance.md), [30-example competition landscape](docs/competition-landscape.md), [seven judge lenses](docs/judge-lenses.md), [impact case](docs/impact-case.md), [verification evidence](docs/verification-evidence.md), [demo package](docs/demo-script.md), and [Devpost draft](docs/devpost-draft.md).
+See [Architecture](docs/architecture.md), [Security model](docs/security-model.md), the [final impact narrative](docs/FINAL_IMPACT_NARRATIVE.md), [native manual test](docs/manual-native-webmcp-test.md), [final-candidate native evidence](docs/final-candidate-native-evidence.md), [public-v1 verification evidence](docs/verification-evidence.md), [final video EDL](docs/FINAL_VIDEO_EDL.md), and [Devpost submission copy](submission/devpost-v3-final.md).
 
 ## Submission readiness
 
-The [public source repository](https://github.com/tandttakumi/agentic-service-dispatch), [working live URL](https://agentic-service-dispatch.vercel.app), and [2:02 public YouTube demo](https://youtu.be/ppIc0-dbmKA) are ready. The video has English audio, completed YouTube processing and copyright checks, and comments disabled. The remaining external step is the Devpost entry and final Submit.
+The official public endpoints are the [source repository](https://github.com/tandttakumi/agentic-service-dispatch) and [live app](https://agentic-service-dispatch.vercel.app). The verified public-v1 [2:02 YouTube demo](https://youtu.be/ppIc0-dbmKA) remains preserved as historical release evidence. Final-candidate source `ef35cfc` has its own native release-gate record; deployment, CI, video, and Devpost identities must each be verified independently against the published release.
 
 ## License
 

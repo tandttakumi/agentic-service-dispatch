@@ -1,0 +1,27 @@
+Watch human approval create the browser's missing commit tool.
+
+A service coordinator reconciles vehicle history, provider qualification, price, availability, and one consequential final action.
+
+The request requires a certified provider before Friday, under sixty thousand yen, with history reviewed—but no submission.
+
+A deterministic runner invokes five WebMCP tools—not a simulated AI.
+
+Draft ready; commit absent.
+
+The human approves that exact dispatch. The actual registry changes from five tools to six. Tool zero six is hash-bound, valid for two minutes, and usable once.
+
+The selected provider meets certification, budget, availability, and deadline. Both alternatives keep their exclusion reasons.
+
+Invoke once. The fictional in-memory action commits; the result settles, approval is consumed, and the temporary capability unregisters.
+
+Six becomes five. The committed result and named revoke remain visible in the same browser view.
+
+Reset is repeatable and restores the same five preparation tools.
+
+This is a frozen, fictional browser-local prototype, not production authorization or an external business write. It has no customer data, authenticated approver, database, or measured outcome.
+
+Five tools prepare, approval creates the sixth, and one use returns the registry to five. Evidence stays source-labeled: public-v1 native evidence and candidate automation. Final-candidate native verification is separate and still required.
+
+The pilot hypothesis is narrower coordination authority. Measure re-entry, corrections, and exposure duration, without claiming results this prototype has not produced.
+
+Prepare broadly. Authorize exactly. Revoke after one use.

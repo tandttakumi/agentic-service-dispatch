@@ -11,7 +11,9 @@ interface CapabilityPanelProps {
   approval: ApprovalRecord | null;
   phase: DispatchPhase;
   remainingSeconds: number;
+  hasSnapshot: boolean;
   error: string | null;
+  shapeError: string | null;
 }
 
 function formatRemaining(seconds: number): string {
@@ -26,7 +28,9 @@ export function CapabilityPanel({
   approval,
   phase,
   remainingSeconds,
+  hasSnapshot,
   error,
+  shapeError,
 }: CapabilityPanelProps) {
   const toolNames = new Set(tools.map((tool) => tool.name));
   const commitVisible = toolNames.has(COMMIT_TOOL_NAME);
@@ -40,16 +44,38 @@ export function CapabilityPanel({
     const rightOrder = toolOrder.get(right.name) ?? Number.MAX_SAFE_INTEGER;
     return leftOrder - rightOrder || left.name.localeCompare(right.name);
   });
+  const surfaceVerified =
+    (availability === "native" || availability === "test") &&
+    hasSnapshot &&
+    !error &&
+    !shapeError;
+  const registryAnnouncement = !surfaceVerified
+    ? "WebMCP registry is not verified. Authority actions are disabled."
+    : commitVisible
+      ? `WebMCP registry verified: ${tools.length} tools. Human approval created the one-time commit capability.`
+      : phase === "committed"
+        ? `WebMCP registry verified: ${tools.length} tools. One-time commit capability revoked after use.`
+        : `WebMCP registry verified: ${tools.length} tools. Commit capability absent.`;
 
   return (
     <section className="capability-section" aria-labelledby="capabilities-heading">
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {registryAnnouncement}
+      </p>
       <div className="section-heading-row">
         <div>
           <p className="eyebrow">Actual browser state</p>
           <h2 id="capabilities-heading">Live WebMCP Capabilities</h2>
         </div>
-        <span className="capability-count" aria-label={`${tools.length} live tools`}>
-          {tools.length}
+        <span
+          className="capability-count"
+          aria-label={
+            surfaceVerified
+              ? `${tools.length} live tools`
+              : "Tool count unavailable"
+          }
+        >
+          {surfaceVerified ? tools.length : "—"}
         </span>
       </div>
 
@@ -64,23 +90,34 @@ export function CapabilityPanel({
         </div>
       ) : null}
 
-      {availability === "error" || error ? (
+      {availability === "error" || error || shapeError ? (
         <div className="runtime-error" role="alert">
           <strong>WebMCP lifecycle error</strong>
-          <span>{error ?? "The native capability surface could not be verified."}</span>
+          <span>
+            {error ??
+              shapeError ??
+              "The native capability surface could not be verified."}
+          </span>
         </div>
       ) : null}
 
-      {availability === "native" || availability === "test" ? (
+      {surfaceVerified ? (
         <>
           <p className="source-proof">
             <span aria-hidden="true" />
-            Fetched from <code>await document.modelContext.getTools()</code>
+            {availability === "native" ? (
+              <>
+                Fetched from <code>await document.modelContext.getTools()</code>
+              </>
+            ) : (
+              <>
+                Fetched from the injected test harness via <code>getTools()</code>
+              </>
+            )}
           </p>
 
           <ul
             className="tool-list"
-            aria-live="polite"
             aria-label="Currently registered WebMCP tools"
           >
             {displayedTools.map((tool, index) => {
@@ -95,13 +132,15 @@ export function CapabilityPanel({
                   {temporary ? (
                     <div>
                       <code>{tool.name}</code>
-                      <span>Approved for this exact draft · One-time use</span>
+                      <span>Created by human approval · Exact draft · One use</span>
                     </div>
                   ) : (
                     <code>{tool.name}</code>
                   )}
                   {temporary ? (
-                    <strong>{formatRemaining(remainingSeconds)}</strong>
+                    <strong aria-hidden="true">
+                      {formatRemaining(remainingSeconds)}
+                    </strong>
                   ) : (
                     <span className="tool-state">LIVE</span>
                   )}
@@ -123,8 +162,8 @@ export function CapabilityPanel({
             ) : (
               <span>
                 {commitVisible
-                  ? "Approval expanded the tool surface"
-                  : "Write capability absent"}
+                  ? "Approval changed the actual registry"
+                  : "Commit capability absent"}
               </span>
             )}
           </div>

@@ -34,7 +34,7 @@ export function ProviderComparison({
           <thead>
             <tr>
               <th scope="col">Provider</th>
-              <th scope="col">Qualified</th>
+              <th scope="col">Certified</th>
               <th scope="col">Price</th>
               <th scope="col">Availability</th>
               <th scope="col">Decision</th>
@@ -50,7 +50,7 @@ export function ProviderComparison({
                   <span>{evaluation.provider.name}</span>
                   <small>{evaluation.provider.distance_km.toFixed(1)} km</small>
                 </th>
-                <td data-label="Qualified">
+                <td data-label="Certified">
                   <span className="binary-label">
                     {evaluation.provider.certified ? "Yes" : "No"}
                   </span>

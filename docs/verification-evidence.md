@@ -1,10 +1,12 @@
 # Verification Evidence — 2026-08-27
 
+> Historical public-v1 record. Commands, ports, metrics, hashes, and external-status wording below describe the 2026-08-27 verification session and its then-current source. They are not final-candidate evidence and are not updated to match the local championship branch.
+
 Verified application source commit:
 
 **cce6f26aab8b43b45b0dd8706e959a13f13a1d59**
 
-The publication commit adds current external evidence and regenerated screenshots after that source baseline; it does not change product runtime code.
+The later public repository commit is **028bba449a1e77cee4cddd7c92592bc126f06412**. Its product runtime inputs are byte-identical to the verified source above; its publication changes add current external evidence and regenerated screenshots rather than changing product runtime code.
 
 ## Fresh-build method
 
@@ -100,7 +102,7 @@ All nine were opened and inspected after final generation.
 
 | View | Outcome | Residual |
 | --- | --- | --- |
-| Official rules | English, license, build-window, public source, live URL, public YouTube video, and description evidence pass. | The Devpost entry remains the external blocker. |
+| Official rules | English, license, build-window, public source, live URL, public YouTube video, and description evidence pass. | At this checkpoint the Devpost entry remained the external blocker; public v1 was subsequently submitted. |
 | WebMCP leverage | Native imperative API, dynamic registration, getTools truth, toolchange, execution, and AbortSignal revocation are core. | Repeat native final recording because the standard is experimental. |
 | Security and race | Exact hash, const input, TTL, generation, idempotency, one-time use, serialized lifecycle, and soak pass. | In-memory prototype is not authenticated production authorization. |
 | React and Next.js | Stable external store, cleanup, stale-read guard, hydration collectors, current local docs, scoped Turbopack root, production build, and public deployment pass. | No deployed field-performance data. |
@@ -116,4 +118,6 @@ All nine were opened and inspected after final generation.
 
 ## Final risk statement
 
-No critical or moderate implementation or deployment issue remained after the final red team. Public source, the working live URL, and the [verified public video](https://youtu.be/ppIc0-dbmKA) are complete. The submission as a whole is **not Stage 1 ready** until the Devpost entry is completed.
+No critical or moderate implementation or deployment issue remained after the final red team. Public source, the working live URL, and the [verified public video](https://youtu.be/ppIc0-dbmKA) were complete. At this checkpoint, the submission as a whole was **not Stage 1 ready** until the Devpost entry was completed.
+
+That final sentence records the checkpoint at the time. Public v1 was subsequently submitted. Exact final candidate source `ef35cfc` later passed its own human-operated native Chrome gate on 2026-08-30; see [final-candidate-native-evidence.md](final-candidate-native-evidence.md). This historical public-v1 record otherwise remains unchanged.

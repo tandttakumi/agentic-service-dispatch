@@ -72,7 +72,7 @@ export interface CreateDraftInput {
   provider_id: "provider-001";
   slot_id: "slot-001";
   quoted_price_jpy: 58000;
-  rationale: "Certified, within budget, and available before the deadline.";
+  rationale: "Certified, within budget, and can complete before the deadline.";
 }
 
 export interface DispatchDraft {

@@ -81,20 +81,21 @@ export class FakeWebMcpAdapter implements WebMcpAdapter {
       );
     }
     const controller = new AbortController();
+    const forwardAbort = () => controller.abort(options.signal?.reason);
     if (options.signal) {
       if (options.signal.aborted) {
         controller.abort(options.signal.reason);
       } else {
-        options.signal.addEventListener(
-          "abort",
-          () => controller.abort(options.signal?.reason),
-          { once: true },
-        );
+        options.signal.addEventListener("abort", forwardAbort, { once: true });
       }
     }
-    return registration.definition.execute(input, {
-      signal: controller.signal,
-    });
+    try {
+      return await registration.definition.execute(input, {
+        signal: controller.signal,
+      });
+    } finally {
+      options.signal?.removeEventListener("abort", forwardAbort);
+    }
   }
 
   addEventListener(type: "toolchange", listener: EventListener): void {
@@ -113,4 +114,3 @@ export class FakeWebMcpAdapter implements WebMcpAdapter {
     return this.registerCount;
   }
 }
-

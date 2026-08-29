@@ -63,6 +63,19 @@ time {
   font-family: var(--font-geist-mono), monospace;
 }
 
+.sr-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .app-shell {
   display: grid;
   gap: 12px;
@@ -105,7 +118,7 @@ time {
 .eyebrow {
   color: var(--text-dim);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.15em;
   line-height: 1.3;
@@ -122,18 +135,81 @@ time {
 }
 
 .thesis {
-  color: var(--text);
-  font-size: clamp(13px, 1.05vw, 16px);
-  font-weight: 560;
-  letter-spacing: -0.01em;
-  line-height: 1.25;
-  margin: 0;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
   text-align: center;
 }
 
-.thesis span {
+.thesis > p {
+  color: var(--text);
+  font-size: clamp(12px, 0.95vw, 15px);
+  font-weight: 620;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.lifecycle-rail {
+  align-items: center;
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lifecycle-rail li {
+  color: var(--text-dim);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+}
+
+.lifecycle-rail li:not([aria-hidden]) {
+  align-items: baseline;
+  background: #0e151a;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  display: inline-flex;
+  gap: 4px;
+  min-width: 80px;
+  padding: 4px 7px;
+}
+
+.lifecycle-rail strong {
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.lifecycle-rail .is-current {
+  border-color: color-mix(in srgb, var(--cyan) 48%, var(--line));
+  color: var(--cyan);
+}
+
+.lifecycle-rail .is-current strong {
+  color: var(--cyan);
+}
+
+.lifecycle-rail li:nth-child(3).is-current {
+  background: var(--amber-soft);
+  border-color: rgba(229, 169, 75, 0.55);
   color: var(--amber);
-  display: block;
+}
+
+.lifecycle-rail li:nth-child(3).is-current strong {
+  color: var(--amber);
+}
+
+.lifecycle-rail li:nth-child(5).is-current {
+  background: var(--green-soft);
+  border-color: rgba(101, 212, 154, 0.45);
+  color: var(--green);
+}
+
+.lifecycle-rail li:nth-child(5).is-current strong {
+  color: var(--green);
 }
 
 .header-actions {
@@ -151,7 +227,7 @@ time {
   color: var(--text-soft);
   display: inline-flex;
   font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   gap: 7px;
   letter-spacing: 0.04em;
@@ -189,11 +265,11 @@ time {
   border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   justify-content: center;
-  min-height: 34px;
-  padding: 8px 12px;
+  min-height: 44px;
+  padding: 10px 14px;
   transition:
     background-color 150ms ease,
     border-color 150ms ease,
@@ -235,7 +311,7 @@ time {
 .button-approve {
   background: var(--amber);
   color: #1b1205;
-  min-height: 40px;
+  min-height: 44px;
   padding-inline: 17px;
 }
 
@@ -246,7 +322,7 @@ time {
 .button-commit {
   background: var(--cyan);
   color: #061014;
-  min-height: 40px;
+  min-height: 44px;
   padding-inline: 17px;
 }
 
@@ -453,6 +529,8 @@ time {
   font-size: 10px;
   line-height: 1.35;
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .condition-list,
@@ -498,6 +576,10 @@ time {
 
 .condition-list .condition-approval {
   background: var(--amber-soft);
+}
+
+.condition-list .condition-approval span {
+  color: var(--text-soft);
 }
 
 .condition-list .condition-approval strong {
@@ -664,6 +746,7 @@ time {
 .provider-table th small,
 .provider-table td small {
   display: block;
+  overflow-wrap: anywhere;
 }
 
 .provider-table th span {
@@ -674,7 +757,7 @@ time {
 .provider-table th small,
 .provider-table td small {
   color: var(--text-dim);
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 450;
   line-height: 1.35;
   margin-top: 2px;
@@ -687,7 +770,7 @@ time {
 
 .decision-label {
   font-family: var(--font-geist-mono), monospace;
-  font-size: 7px;
+  font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
@@ -812,14 +895,14 @@ time {
 
 .hash-binding span {
   color: var(--amber);
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
 }
 
 .hash-binding code {
   color: #f1c477;
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .draft-action-row {
@@ -875,12 +958,12 @@ time {
 
 .committed-result strong {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .committed-result p {
   color: #8cc6aa;
-  font-size: 8px;
+  font-size: 10px;
   margin: 2px 0 0;
 }
 
@@ -908,7 +991,7 @@ time {
 .unsupported-notice,
 .runtime-error {
   border-radius: 8px;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.45;
   margin: 0 0 10px;
   padding: 10px;
@@ -937,13 +1020,14 @@ time {
 .runtime-error span {
   color: #c89692;
   margin-top: 2px;
+  overflow-wrap: anywhere;
 }
 
 .source-proof {
   align-items: center;
   color: var(--text-dim);
   display: flex;
-  font-size: 9px;
+  font-size: 10px;
   gap: 6px;
   margin: 0 0 8px;
 }
@@ -979,19 +1063,19 @@ time {
 .tool-index {
   color: var(--text-dim);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .tool-list code {
   color: var(--text-soft);
-  font-size: 9px;
+  font-size: 10px;
   overflow-wrap: anywhere;
 }
 
 .tool-state {
   color: var(--cyan);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 750;
   letter-spacing: 0.07em;
 }
@@ -1020,7 +1104,7 @@ time {
 .tool-temporary div > span {
   color: #c89a58;
   display: block;
-  font-size: 8px;
+  font-size: 9px;
   margin-top: 2px;
 }
 
@@ -1033,7 +1117,7 @@ time {
   color: var(--text-dim);
   display: flex;
   font-family: var(--font-geist-mono), monospace;
-  font-size: 8px;
+  font-size: 9px;
   justify-content: space-between;
   margin-top: 8px;
 }
@@ -1105,32 +1189,54 @@ time {
 }
 
 .global-alert {
-  align-items: center;
+  align-items: flex-start;
   background: var(--red-soft);
   border: 1px solid rgba(239, 123, 114, 0.38);
   border-radius: 8px;
   bottom: 14px;
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   left: 50%;
-  max-width: min(680px, calc(100vw - 32px));
+  max-width: 680px;
   padding: 9px 11px;
   position: fixed;
   transform: translateX(-50%);
+  width: calc(100vw - 32px);
   z-index: 20;
+}
+
+.global-alert-heading {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .global-alert strong {
   color: var(--red);
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 8px;
+  font-size: 11px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
-.global-alert span {
+.global-alert-code {
+  color: var(--text-dim);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+  letter-spacing: 0.04em;
+}
+
+.global-alert-message {
   color: #d3a19d;
   flex: 1;
-  font-size: 9px;
+  font-size: 11px;
+  line-height: 1.45;
+  min-width: min(260px, 100%);
+  overflow-wrap: anywhere;
 }
 
 .global-alert button {
@@ -1138,14 +1244,16 @@ time {
   border: 0;
   color: var(--text-soft);
   cursor: pointer;
-  font-size: 8px;
+  font-size: 10px;
+  min-height: 44px;
+  padding-inline: 8px;
   text-decoration: underline;
 }
 
 .data-notice {
-  color: #59666b;
+  color: var(--text-dim);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 0.03em;
   margin: -4px 0 0;
   text-align: right;
@@ -1215,7 +1323,8 @@ time {
   }
 
   .thesis {
-    display: none;
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 
   .workspace-grid {
@@ -1240,6 +1349,18 @@ time {
 
   .workspace-grid {
     grid-template-columns: 1fr;
+  }
+
+  .capability-panel {
+    grid-row: 1;
+  }
+
+  .decision-panel {
+    grid-row: 2;
+  }
+
+  .context-panel {
+    grid-row: 3;
   }
 
   .panel {
@@ -1291,6 +1412,22 @@ time {
   .header-actions {
     justify-content: space-between;
     width: 100%;
+  }
+
+  .thesis {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .lifecycle-rail {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .lifecycle-rail li:not([aria-hidden]) {
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
   }
 
   .prompt-strip {
@@ -1383,7 +1520,7 @@ time {
     content: attr(data-label);
     display: block;
     font-family: var(--font-geist-mono), monospace;
-    font-size: 7px;
+    font-size: 8px;
     margin-bottom: 2px;
     text-transform: uppercase;
   }
