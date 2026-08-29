@@ -146,7 +146,7 @@ See [Architecture](docs/architecture.md), [Security model](docs/security-model.m
 
 ## Submission readiness
 
-The official public endpoints are the [source repository](https://github.com/tandttakumi/agentic-service-dispatch) and [live app](https://agentic-service-dispatch.vercel.app). The verified public-v1 [2:02 YouTube demo](https://youtu.be/ppIc0-dbmKA) remains preserved as historical release evidence. Final-candidate source `ef35cfc` has its own native release-gate record; deployment, CI, video, and Devpost identities must each be verified independently against the published release.
+The official public endpoints are the [source repository](https://github.com/tandttakumi/agentic-service-dispatch) and [live app](https://agentic-service-dispatch.vercel.app). Public `main` publishes the byte-identical final-candidate runtime from source `ef35cfc`; [GitHub Actions](https://github.com/tandttakumi/agentic-service-dispatch/actions) independently reruns the tracked release gate for each published commit. The verified public-v1 [2:02 YouTube demo](https://youtu.be/ppIc0-dbmKA) remains preserved and source-labeled because no final-candidate native recording is being claimed as a replacement. Final-candidate native evidence is recorded separately in [the release-gate record](docs/final-candidate-native-evidence.md).
 
 ## License
 

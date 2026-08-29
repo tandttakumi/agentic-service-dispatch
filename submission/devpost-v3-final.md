@@ -115,5 +115,7 @@ Codex assisted with implementation review, adversarial tests, copy, docs, and lo
 - Native evidence: public v1 (public commit `028bba44`) completed Chrome 151.0.7922.174 **5 → 6 → 5** on 2026-08-27, with two Resets, four screenshots, and no captured errors; its verification record identifies the byte-identical tested runtime source.
 - Final-candidate native evidence: exact source `ef35cfc` completed Chrome 151.0.7922.174 **5 → 5 → 6 → 5 → Reset → 5** on 2026-08-30; tool 06 was only `commit_approved_dispatch`, with no observed error, duplicate, stopped transition, or stuck state.
 - Automated candidate evidence: visibly labeled Vitest/Playwright harness; not browser-engine conformance.
-- Public v1 artifacts: [source repository](https://github.com/tandttakumi/agentic-service-dispatch), [live app](https://agentic-service-dispatch.vercel.app), and [2:02 YouTube demo](https://youtu.be/ppIc0-dbmKA).
-- Candidate release status: native-confirmed; public commit, deployment, video, and Devpost identities are verified separately before the submission is saved.
+- Current public release: [source repository](https://github.com/tandttakumi/agentic-service-dispatch) and [live app](https://agentic-service-dispatch.vercel.app) publish the byte-identical final-candidate runtime from source `ef35cfc`; the clean release commit is `1c0ea44`, followed only by public-copy corrections.
+- CI: the tracked GitHub Actions release gate must succeed for the exact current public commit before the Devpost update is saved.
+- Video: the verified public-v1 [2:02 YouTube demo](https://youtu.be/ppIc0-dbmKA) remains preserved and source-labeled; no final-candidate native recording is claimed as a replacement.
+- Devpost status: this copy is staged for the existing submission; its public Save/Submit confirmation remains a separate final action.
