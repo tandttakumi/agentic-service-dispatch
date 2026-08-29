@@ -20,7 +20,7 @@ Reset is repeatable and restores the same five preparation tools.
 
 This is a frozen, fictional browser-local prototype, not production authorization or an external business write. It has no customer data, authenticated approver, database, or measured outcome.
 
-Five tools prepare, approval creates the sixth, and one use returns the registry to five. Evidence stays source-labeled: public-v1 native evidence and candidate automation. Final-candidate native verification is separate and still required.
+Five tools prepare, approval creates the sixth, and one use returns the registry to five. Evidence stays source-labeled: public-v1 native evidence and candidate automation. The final-candidate native gate is separately recorded.
 
 The pilot hypothesis is narrower coordination authority. Measure re-entry, corrections, and exposure duration, without claiming results this prototype has not produced.
 

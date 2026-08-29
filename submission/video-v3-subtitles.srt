@@ -105,8 +105,8 @@ and candidate automation.
 
 23
 00:01:46,267 --> 00:01:50,000
-Final-candidate native verification
-is separate and still required.
+The final-candidate native gate
+is separately recorded.
 
 24
 00:01:50,000 --> 00:01:53,818
