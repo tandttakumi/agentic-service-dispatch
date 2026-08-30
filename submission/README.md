@@ -17,9 +17,9 @@ The published video uses AI-generated narration, disclosed through YouTube's AI-
 
 ## Published copy
 
-The verified master is public on the Re Labs channel at [youtu.be/ppIc0-dbmKA](https://youtu.be/ppIc0-dbmKA). YouTube reports a rendered duration of 2:02, completed processing, an AI-use disclosure, no copyright issue, and comments disabled.
+The verified v2 master is public on the Re Labs channel at [youtu.be/N8LuuoV7zKI](https://youtu.be/N8LuuoV7zKI). YouTube reports a rendered duration of 2:12, completed processing, an AI-use disclosure, exact English subtitles, no copyright issue, and comments disabled.
 
-The public URL is included in the submitted public-v1 Devpost entry. Do not modify the repository, live site, video, or Devpost entry after the submission deadline or during judging.
+The public v2 URL is included in the submitted Devpost entry. Do not modify the repository, live site, video, or Devpost entry after this verified replacement during judging.
 
 ## Final candidate package
 
@@ -31,4 +31,4 @@ The final candidate adds:
 - `video-v3-shot-list.md`
 - the exact edit plan in `../docs/FINAL_VIDEO_EDL.md`
 
-No v3 MP4 is committed in this repository. The final candidate passed its human-operated native gate on 2026-08-30, but no candidate-native source recording is included here. Preserve the submitted-v1 master. A replacement is valid only after its source footage and narration are approved and the completed file is decoded, reviewed, hashed, and recorded separately; otherwise keep the public-v1 video unchanged.
+No v3 MP4 is committed in this repository. The final candidate passed its human-operated native gate on 2026-08-30, and the separately retained v2 source recording was rendered, fully decoded, reviewed, hashed, and verified before publication. The repository continues to distinguish the published video from the committed evidence artifacts.
