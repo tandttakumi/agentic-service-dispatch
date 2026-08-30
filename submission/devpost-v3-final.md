@@ -20,7 +20,7 @@ Five page-owned WebMCP tools prepare; human approval creates one exact sixth too
 
 Service coordinators cross asset records, prior work, provider qualifications, calendars, prices, deadlines, and a final dispatch system. Agents can prepare that work, but “don't submit until I approve” is only an instruction; it does not change authority.
 
-This fictional workflow comes from the entrant's firsthand vehicle and service-operations experience. It tests a stronger boundary: human approval creates one narrow capability for one reviewed object, then use removes it.
+The entrant is a founder/operator of an automotive and service business. This fictional workflow is abstracted from firsthand work coordinating vehicle context, prior service history, provider qualifications, pricing, availability, constraints, selection, and final request authority. It tests a stronger boundary: human approval creates one narrow capability for one reviewed object, then use removes it.
 
 ## What it does
 
@@ -67,7 +67,7 @@ Public v1 exposed the hardest browser issue: revoking tool 06 before its success
 - The actual registry is the visual proof.
 - Public v1 completed human-native **5 → 6 → 5** on 2026-08-27 without runtime error.
 - Exact final candidate source `ef35cfc` completed human-native **5 → 5 → 6 → 5 → Reset → 5** on 2026-08-30; tool 06 was only `commit_approved_dispatch`, with no observed error, duplicate, stopped transition, or stuck state.
-- Candidate automation is 290 tests, ten 320–1920px browser flows, and 96.02/93.67/98.64/96.82% executable-source statement/branch/function/line coverage. It includes hostile inputs, hash races, cancellation, native-string/schema-runner compatibility, accessibility, and soak work—but the automated harness is not native conformance.
+- Candidate automation is 290 automated tests, 10 E2E browser flows across 320–1920px, and 96.02/93.67/98.64/96.82% executable-source statement/branch/function/line coverage. It includes hostile inputs, hash races, cancellation, native-string/schema-runner compatibility, accessibility, and soak work—but the automated harness is not native conformance.
 
 ## What we learned
 
@@ -75,7 +75,25 @@ Tool design is authorization design. Inputs constrain arguments; trust also need
 
 ## Potential impact
 
-The first pilot belongs in field-service maintenance or repair. Procurement approval and refund release are transfer hypotheses, not implemented verticals. There are no production users, savings, revenue, or integrations. A pilot should measure draft time, re-entry, constraint misses, corrections, capability exposure, rejected stale/replay attempts, and operator comprehension.
+### Customer
+
+Service coordinators in automotive, field service, maintenance, repair, inspection, installation, and similar operational businesses.
+
+### Pain
+
+A coordinator may have to manually cross asset or vehicle context, previous service history, provider qualification, pricing, availability, multiple constraints, exclusion reasons, repeated data entry, and final submission authority before one consequential request can be released.
+
+### Value
+
+The agent prepares one structured decision through page-owned WebMCP tools. The human reviews one exact draft. Approval creates one exact, temporary write capability. One approved action consumes that capability. It then disappears, while the reviewed object, capability lifecycle, and audit trace remain visible on the shared page.
+
+### Practical impact
+
+The design targets fewer dropped operational constraints, visible reasons for excluding unsuitable providers, less fragmented coordination and re-entry, no permanently exposed broad commit capability, exact-object human approval, inspectable authority, and a shared operational state for the human and agent.
+
+Built from firsthand experience coordinating real automotive and service operations, Agentic Service Dispatch turns one concrete vehicle-service workflow into a reusable authority pattern: the agent prepares the operational decision, but consequential authority exists only for the exact action a human reviewed and approved.
+
+The pattern can be tested in field service, maintenance, repair, inspection, installation, procurement, and similar prepare/review/authorize workflows. These are transfer paths for pilots, not claims of existing multi-industry use. No production users, measured time savings, financial impact, market size, or external reviewer result is claimed. A pilot should measure draft time, re-entry, constraint misses, corrections, capability exposure, rejected stale/replay attempts, and operator comprehension.
 
 ## What's next
 
@@ -108,14 +126,13 @@ This is a frozen Aug 27, 2026 scenario. Every vehicle, customer, provider, servi
 
 ## AI-use disclosure
 
-Codex assisted with implementation review, adversarial tests, copy, docs, and local verification. The entrant directed the product and evidence boundaries. Every displayed customer and provider identity is a fictional fixture; no real customer/provider identity or outcome and no AI-generated image or voice was used.
+Codex assisted with implementation review, adversarial tests, copy, docs, local verification, and demo-production support. The entrant directed the product and evidence boundaries. AI-generated narration was used for the demo video and is disclosed on YouTube. No AI-generated images were used; the video visuals are application captures, separately labeled native Chrome stills, and a visibly labeled deterministic test-adapter recording. Every displayed customer and provider identity is a fictional fixture; no real customer/provider identity or outcome is shown.
 
 ## Evidence boundary for reviewers
 
 - Native evidence: public v1 (public commit `028bba44`) completed Chrome 151.0.7922.174 **5 → 6 → 5** on 2026-08-27, with two Resets, four screenshots, and no captured errors; its verification record identifies the byte-identical tested runtime source.
 - Final-candidate native evidence: exact source `ef35cfc` completed Chrome 151.0.7922.174 **5 → 5 → 6 → 5 → Reset → 5** on 2026-08-30; tool 06 was only `commit_approved_dispatch`, with no observed error, duplicate, stopped transition, or stuck state.
 - Automated candidate evidence: visibly labeled Vitest/Playwright harness; not browser-engine conformance.
-- Current public release: [source repository](https://github.com/tandttakumi/agentic-service-dispatch) and [live app](https://agentic-service-dispatch.vercel.app) publish the byte-identical final-candidate runtime from source `ef35cfc`; the clean release commit is `1c0ea44`, followed only by public-copy corrections.
-- CI: the tracked GitHub Actions release gate must succeed for the exact current public commit before the Devpost update is saved.
-- Video: the verified public-v1 [2:02 YouTube demo](https://youtu.be/ppIc0-dbmKA) remains preserved and source-labeled; no final-candidate native recording is claimed as a replacement.
-- Devpost status: this copy is staged for the existing submission; its public Save/Submit confirmation remains a separate final action.
+- Current public release: [source repository](https://github.com/tandttakumi/agentic-service-dispatch) and [live app](https://agentic-service-dispatch.vercel.app) publish the byte-identical final-candidate runtime from source `ef35cfc`; later public commits change documentation only.
+- CI: the tracked [GitHub Actions release gate](https://github.com/tandttakumi/agentic-service-dispatch/actions) independently verifies every public commit.
+- Video: the verified public-v1 [2:02 YouTube demo](https://youtu.be/ppIc0-dbmKA) remains preserved and source-labeled; it uses disclosed AI-generated narration, no AI-generated images, and does not claim final-candidate native footage.

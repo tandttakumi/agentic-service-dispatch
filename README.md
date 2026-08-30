@@ -20,7 +20,7 @@ Separate engine evidence remains preserved as the [public-v1 native Chrome appro
 
 Real-world service work is fragmented across customer records, prior-service notes, provider qualifications, availability, pricing, and final dispatch systems. Agents can help coordinate that work, but a prompt such as “do not submit” is only an instruction. It is not an enforceable authority boundary.
 
-The workflow was abstracted from the entrant's firsthand vehicle and service-operations experience. Every company, vehicle, provider, record, price, and outcome in the demo is fictional.
+The entrant is a founder/operator of an automotive and service business. The workflow was abstracted from firsthand work crossing vehicle context, prior service history, provider qualifications, price, availability, constraints, selection, and final request authority. Every company, vehicle, provider, record, price, and outcome in the demo is fictional.
 
 Agentic Service Dispatch separates preparation from authority. An agent may gather context, compare providers, check availability, and build a draft. The visible approval control—not another WebMCP tool—creates a short-lived capability to commit precisely what was reviewed.
 
@@ -74,6 +74,20 @@ The security boundary is enforced in domain logic, not only in button state. App
 
 The agent prepares evidence and a proposed decision. The human reviews the selected provider, slot, price, scope, rationale, and draft-binding hash. Approval changes the available tool set; it does not merely append another instruction to a conversation. Commit consumes that authority.
 
+## Potential impact
+
+**Customer.** Service coordinators in automotive, field service, maintenance, repair, inspection, installation, and similar operational businesses.
+
+**Pain.** One coordinator may have to cross asset or vehicle context, previous service history, provider qualification, pricing, availability, multiple constraints, exclusion reasons, repeated data entry, and final submission authority before one consequential request can be released.
+
+**Value.** The agent prepares one structured decision through page-owned WebMCP tools. The human reviews one exact draft. Approval creates one exact, temporary write capability; one approved action consumes it; the capability then disappears. The page keeps the reviewed object, capability lifecycle, and audit trace visible to both the human and the agent.
+
+**Practical impact to validate.** This design targets fewer dropped operational constraints, visible reasons for excluding unsuitable providers, less fragmented coordination and re-entry, no permanently exposed broad commit capability, exact-object human approval, and inspectable authority. These are concrete pilot hypotheses, not measured outcomes.
+
+Built from firsthand experience coordinating real automotive and service operations, Agentic Service Dispatch turns one concrete vehicle-service workflow into a reusable authority pattern: the agent prepares the operational decision, but consequential authority exists only for the exact action a human reviewed and approved.
+
+The same prepare/review/authorize/revoke pattern can be tested in field service, maintenance, repair, inspection, installation, procurement, and similar workflows. Those are transfer paths for future pilots, not claims of existing adoption. No production-user, time-saving, financial-impact, or market-size result is claimed.
+
 ## Local setup
 
 Requirements: Node.js 24.15 or newer within the Node 24 line, plus npm. The checked-in `.nvmrc` pins the locally verified 24.18.0 release; `package.json#engines` plus the project `.npmrc` reject runtimes outside that lockfile-compatible range.
@@ -125,6 +139,10 @@ The 290-test unit/component/lifecycle suite includes 74 explicit agent-input sce
 
 The demo is a frozen Aug 27, 2026 scenario. Its vehicle, customer, providers, service history, pricing, availability, and dispatch records are fictional. The app contains no real customer data or service-company branding, third-party logos, stock imagery, or external operational writes.
 
+## AI-use disclosure
+
+The published 2:02 demo video uses AI-generated narration, and that use is disclosed on YouTube. No AI-generated images were used: the visuals are application captures, separately labeled native Chrome stills, and a visibly labeled deterministic test-adapter recording. Codex assisted with implementation review, adversarial tests, copy, documentation, and demo-production support; the entrant directed the product and evidence boundaries.
+
 ## Known limitations
 
 - Native Chrome screenshots and a separate visibly labeled Playwright harness are both committed; only the `native-chrome-*` files are browser-engine evidence.
@@ -139,7 +157,7 @@ The demo is a frozen Aug 27, 2026 scenario. Its vehicle, customer, providers, se
 
 - **WebMCP Leverage:** the real tool surface changes at the human-approval boundary and is read back through `getTools()`.
 - **Execution:** strict schemas and callbacks, ambiguity-rejecting canonical hashing, exact approval-window and nonce binding, idempotency, settlement-safe revocation, and 290 automated unit/component/lifecycle tests support a polished one-screen flow.
-- **Potential Impact:** field-service coordination is the grounded use case; transfer to other prepared-by-agent / authorized-by-human operations remains a hypothesis for pilots.
+- **Potential Impact:** an operator-derived coordination problem is expressed as a reusable prepare/review/authorize/revoke pattern for automotive and adjacent service operations, with practical benefits framed as testable pilot hypotheses rather than measured outcomes.
 - **Creativity & Ambition:** approval becomes a temporary capability object rather than prompt text or a permanently registered disabled action.
 
 See [Architecture](docs/architecture.md), [Security model](docs/security-model.md), the [final impact narrative](docs/FINAL_IMPACT_NARRATIVE.md), [native manual test](docs/manual-native-webmcp-test.md), [final-candidate native evidence](docs/final-candidate-native-evidence.md), [public-v1 verification evidence](docs/verification-evidence.md), [final video EDL](docs/FINAL_VIDEO_EDL.md), and [Devpost submission copy](submission/devpost-v3-final.md).

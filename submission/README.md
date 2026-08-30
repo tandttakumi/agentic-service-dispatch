@@ -11,11 +11,13 @@
 - SHA-256: `597ced40dff68bd60a48838afdaee08abf6981839443baaa8f7f12066f4ff2c2`
 - Decode verification: passed for the complete video and audio streams
 
-The historical public-v1 package recorded `narration.txt` as its exact generated narration source. That source is excluded from the final-candidate release; `video-v3-voiceover.txt` is the current candidate narration source. The public-v1 moving interaction is visibly labeled as the deterministic test adapter, while its native Chrome evidence appears as separately labeled initial, approved, committed, and reset frames.
+The historical public-v1 package recorded `narration.txt` as the exact script used for its AI-generated English narration. That source is excluded from the final-candidate release; `video-v3-voiceover.txt` is the current candidate narration source. The public-v1 moving interaction is visibly labeled as the deterministic test adapter, while its native Chrome evidence appears as separately labeled initial, approved, committed, and reset frames.
+
+The published video uses AI-generated narration, disclosed through YouTube's AI-content setting and description. No AI-generated images were used: its visuals are application captures, four separately labeled native Chrome stills, and a visibly labeled deterministic test-adapter recording.
 
 ## Published copy
 
-The verified master is public on the Re Labs channel at [youtu.be/ppIc0-dbmKA](https://youtu.be/ppIc0-dbmKA). YouTube reports a rendered duration of 2:02, completed processing, no copyright issue, and comments disabled.
+The verified master is public on the Re Labs channel at [youtu.be/ppIc0-dbmKA](https://youtu.be/ppIc0-dbmKA). YouTube reports a rendered duration of 2:02, completed processing, an AI-use disclosure, no copyright issue, and comments disabled.
 
 The public URL is included in the submitted public-v1 Devpost entry. Do not modify the repository, live site, video, or Devpost entry after the submission deadline or during judging.
 

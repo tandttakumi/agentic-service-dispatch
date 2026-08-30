@@ -2,7 +2,7 @@
 
 ## Production status
 
-Target: **2:10**. Release artifact status: no final-candidate MP4 is included in the repository. The candidate passed its human native-Chrome gate on 2026-08-30, but no candidate-native source recording is committed here and the narration master remains a separate release asset. The submitted-v1 MP4 stays unchanged. Any replacement must record its source labels, rendered-file hash, decode review, and public URL separately. A misleading test-adapter-as-native recut remains prohibited.
+Target: **2:10**. Release artifact status: no final-candidate MP4 is included in the repository. The candidate passed its human native-Chrome gate on 2026-08-30, but no candidate-native source recording is committed here and the narration master remains a separate release asset. The submitted-v1 MP4 stays unchanged. Its narration is AI-generated and disclosed on YouTube; its imagery is entirely application capture, separately labeled native Chrome stills, and visibly labeled test-adapter footage, not AI-generated imagery. Any replacement must record its source labels, narration provenance, rendered-file hash, decode review, and public URL separately. A misleading test-adapter-as-native recut remains prohibited.
 
 The voiceover, subtitles, shot list, and exact edit plan below are complete. Render `submission/video-v3-final-candidate.mp4` only after capturing one uncut final-candidate native lifecycle or, if using automated footage, retain a persistent **TEST ADAPTER · APPLICATION EVIDENCE · NOT NATIVE** label.
 
