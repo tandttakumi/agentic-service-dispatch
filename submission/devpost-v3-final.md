@@ -28,6 +28,18 @@ A single request asks for a qualified fictional automotive detailer before Frida
 
 The human reviews provider, slot, price, scope, rationale, and binding. Only then does `commit_approved_dispatch` appear as tool 06. One use commits the in-memory draft; after the result crosses the caller boundary, the registration aborts on the next task and `getTools()` confirms five again. Both public v1 and exact final candidate source `ef35cfc` separately verified that settlement timing in native Chrome. Reset returns to the exact five-tool baseline.
 
+## Real-agent verification
+
+On **2026-08-31 (JST)**, **Codex + official Chrome DevTools for agents** selected and executed the public page's registered WebMCP tools from a natural-language business request, without page-tool names or an execution order in the prompt.
+
+Actual order: `get_active_vehicle` → `get_service_history` → `search_qualified_providers` → `check_provider_availability` → `create_dispatch_draft` → **human approval of the exact draft** → `commit_approved_dispatch`.
+
+The five preparation tools produced **DRAFT — NOT SUBMITTED**. After human approval, the only added tool was `commit_approved_dispatch`. Codex rediscovered it with `list_webmcp_tools`, executed it once through `execute_webmcp_tool`, and verified revocation: **5 → 6 → 5**. All six page-tool executions completed.
+
+This is separate evidence from the on-page deterministic runner and the Playwright test adapter; neither was used in this real-agent run. It is **not ChatGPT Site tools**. **Reset Demo was not verified through this agent route**; the separate human-operated native Chrome Reset check remains labeled as such. The fixed, fictional scenario demonstrates model-selected tool execution, not unrestricted planning or a real commercial booking.
+
+Environment: Chrome **151.0.7922.174**, official Chrome DevTools MCP **1.8.0**, Codex **0.151.0-alpha.7.2**, using an isolated Chrome profile. [Recorded tool arguments, registry observations, and page screenshots](https://github.com/tandttakumi/agentic-service-dispatch/blob/main/docs/real-agent-verification.md).
+
 ## How it works
 
 The deterministic runner discovers and invokes the five registered preparation tools in order; it is a verification aid, not a simulated AI. Visible approval binds the canonical draft hash and creates tool 06 for 120 seconds and one use. Commit accepts only the bound approval ID, consumes in-memory authority, settles, unregisters tool 06, and proves the exact five-name baseline through `getTools()`.
@@ -126,7 +138,7 @@ This is a frozen Aug 27, 2026 scenario. Every vehicle, customer, provider, servi
 
 ## AI-use disclosure
 
-Codex assisted with implementation review, adversarial tests, copy, docs, local verification, and demo-production support. The entrant directed the product and evidence boundaries. AI-generated narration was used for the demo video and is disclosed on YouTube. No AI-generated images were used; the video visuals are application captures, separately labeled native Chrome stills, and a visibly labeled deterministic test-adapter recording. Every displayed customer and provider identity is a fictional fixture; no real customer/provider identity or outcome is shown.
+Codex assisted with implementation review, adversarial tests, copy, docs, local verification, and demo-production support. The entrant directed the product and evidence boundaries. AI-generated narration was used for the demo video and is disclosed on YouTube. No AI-generated images were used. The current 2:12 public-v2 video shows final-candidate native Chrome footage with a clearly labeled deterministic runner; it is not the separate Codex real-agent run. Historical test-adapter images remain explicitly labeled as application evidence, not native or real-agent evidence. Every displayed customer and provider identity is a fictional fixture; no real customer/provider identity or outcome is shown.
 
 ## Evidence boundary for reviewers
 

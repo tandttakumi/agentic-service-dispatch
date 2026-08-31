@@ -1,5 +1,17 @@
 # Browser artifacts
 
+## Real-agent evidence — 2026-08-31
+
+**CODEX + OFFICIAL CHROME DEVTOOLS FOR AGENTS.** The real model selected and executed `get_active_vehicle` → `get_service_history` → `search_qualified_providers` → `check_provider_availability` → `create_dispatch_draft` → **human exact-draft approval** → `commit_approved_dispatch` on the public page. Recorded model-issued registry checks confirmed **5 → 6 → 5**. The runner and test adapter were not used. Reset was not verified through this route.
+
+The [verification record](../docs/real-agent-verification.md) supplies prompt, tool arguments, dates, versions, registry results, and limitations. Original page-only captures are in `real-agent-2026-08-31/`:
+
+- `draft-five.png`: model-created unsubmitted draft; five tools.
+- `human-approved-six.png`: human approval between draft and commit; only `commit_approved_dispatch` added.
+- `committed-five.png`: Codex executed the approved tool once; capability revoked; five tools.
+
+The visible app runner controls were not used in this run. Screenshots show page state; the recorded model activity establishes who executed the tools. These are edited-selection stills, not an uninterrupted recording. No AI-generated imagery was used.
+
 ## Native Chrome evidence
 
 These four PNGs were captured on 2026-08-27 from the [public deployment](https://agentic-service-dispatch.vercel.app) in Chrome **151.0.7922.174** with WebMCP testing enabled. The page badge reads **Native WebMCP available** and the capability panel displays the live `getTools()` result.
@@ -13,7 +25,7 @@ The same session completed two consecutive Resets and captured no Chrome error-l
 
 ## Final candidate — human native record
 
-Exact candidate source `ef35cfc` passed a separate uninterrupted human-operated Chrome 151.0.7922.174 **5 → 5 → 6 → 5 → Reset → 5** gate on 2026-08-30. Its written [identity and evidence boundary](../docs/final-candidate-native-evidence.md) is separate from both the immutable public-v1 native stills above and the automated final-candidate images below. No final-candidate native screenshot or recording is committed here.
+Exact candidate source `ef35cfc` passed a separate uninterrupted human-operated Chrome 151.0.7922.174 **5 → 5 → 6 → 5 → Reset → 5** gate on 2026-08-30. Its written [identity and evidence boundary](../docs/final-candidate-native-evidence.md) is separate from the immutable public-v1 native stills, the 2026-08-31 real-agent captures above, and the automated final-candidate images below. No screenshot from the August 30 manual gate is committed here; the later real-agent captures do not replace that gate or prove its Reset path.
 
 ## Historical public-v1 application evidence — archive record
 

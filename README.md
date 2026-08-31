@@ -41,6 +41,18 @@ Primary references: the [WebMCP specification](https://webmachinelearning.github
 
 The memorable shape is **5 → 6 → 5 capabilities**.
 
+## Real-agent verification
+
+On **2026-08-31 (JST)**, **Codex + official Chrome DevTools for agents** selected and executed the public page's registered WebMCP tools from a natural-language business request, without page-tool names or an execution order in the prompt.
+
+Actual order: `get_active_vehicle` → `get_service_history` → `search_qualified_providers` → `check_provider_availability` → `create_dispatch_draft` → **human approval of the exact draft** → `commit_approved_dispatch`.
+
+The five preparation tools produced **DRAFT — NOT SUBMITTED**. After human approval, the only added tool was `commit_approved_dispatch`. Codex rediscovered it with `list_webmcp_tools`, executed it once through `execute_webmcp_tool`, and verified revocation: **5 → 6 → 5**. All six page-tool executions completed.
+
+This is separate evidence from the on-page deterministic runner and the Playwright test adapter; neither was used in this real-agent run. It is **not ChatGPT Site tools**. **Reset Demo was not verified through this agent route**; the separate human-operated native Chrome Reset check remains labeled as such. The fixed, fictional scenario demonstrates model-selected tool execution, not unrestricted planning or a real commercial booking.
+
+Environment: Chrome **151.0.7922.174**, official Chrome DevTools MCP **1.8.0**, Codex **0.151.0-alpha.7.2**, using an isolated Chrome profile. [Recorded tool arguments, registry observations, and page screenshots](docs/real-agent-verification.md).
+
 ## Tool inventory
 
 | Tool | Available | Role |
@@ -141,11 +153,11 @@ The demo is a frozen Aug 27, 2026 scenario. Its vehicle, customer, providers, se
 
 ## AI-use disclosure
 
-The published 2:02 demo video uses AI-generated narration, and that use is disclosed on YouTube. No AI-generated images were used: the visuals are application captures, separately labeled native Chrome stills, and a visibly labeled deterministic test-adapter recording. Codex assisted with implementation review, adversarial tests, copy, documentation, and demo-production support; the entrant directed the product and evidence boundaries.
+The current public-v2 [2:12 demo video](https://youtu.be/N8LuuoV7zKI) uses AI-generated narration, and that use is disclosed on YouTube. No AI-generated images were used. The video shows final-candidate native Chrome footage with a clearly labeled deterministic runner; it is not the separate Codex real-agent run documented above. Historical test-adapter images remain explicitly labeled as application evidence, not native or real-agent evidence. Codex assisted with implementation review, adversarial tests, copy, documentation, and demo-production support; the entrant directed the product and evidence boundaries.
 
 ## Known limitations
 
-- Native Chrome screenshots and a separate visibly labeled Playwright harness are both committed; only the `native-chrome-*` files are browser-engine evidence.
+- Historical native Chrome screenshots, the separately recorded Codex real-agent run, and a visibly labeled Playwright harness are preserved with distinct source labels. The harness is application evidence, not native or real-agent evidence.
 - The demo persists nothing and intentionally stops at a local, fictional commit result.
 - The fixed fixtures prove the authority pattern, not provider-search breadth or production scheduling integration.
 - The callback verifies the last observed native registry surface before domain validation; WebMCP does not provide an atomic registry-snapshot-and-consume operation across the later asynchronous digest.
