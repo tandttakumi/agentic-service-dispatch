@@ -17,9 +17,9 @@ That historical public-v1 video uses AI-generated narration, disclosed through Y
 
 ## Published copy
 
-The verified v2 master is public on the Re Labs channel at [youtu.be/N8LuuoV7zKI](https://youtu.be/N8LuuoV7zKI). YouTube reports a rendered duration of 2:12, completed processing, an AI-use disclosure, exact English subtitles, no copyright issue, and comments disabled.
+The verified v3 master is public on the Re Labs channel at [youtu.be/UZaS9vG9Mkw](https://youtu.be/UZaS9vG9Mkw). YouTube reports a rendered duration of 2:13, completed processing, an AI-use disclosure, authored English subtitles, no copyright issue, and comments disabled. Its opening centers the separate Codex + official Chrome DevTools for agents Tier A evidence.
 
-The public v2 URL is included in the submitted Devpost entry. Its final-candidate native Chrome footage uses a clearly labeled deterministic runner, not an external AI agent. AI-generated narration is disclosed; no AI-generated images were used.
+The public v3 URL is included in the submitted Devpost entry. Its opening uses the separate Codex + official Chrome DevTools for agents Tier A evidence; the deterministic runner and separate native Chrome Reset evidence are not presented as that real-agent run. AI-generated narration is disclosed; no AI-generated images were used.
 
 ## Separate real-agent verification
 

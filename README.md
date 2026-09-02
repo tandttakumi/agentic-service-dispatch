@@ -153,7 +153,7 @@ The demo is a frozen Aug 27, 2026 scenario. Its vehicle, customer, providers, se
 
 ## AI-use disclosure
 
-The current public-v2 [2:12 demo video](https://youtu.be/N8LuuoV7zKI) uses AI-generated narration, and that use is disclosed on YouTube. No AI-generated images were used. The video shows final-candidate native Chrome footage with a clearly labeled deterministic runner; it is not the separate Codex real-agent run documented above. Historical test-adapter images remain explicitly labeled as application evidence, not native or real-agent evidence. Codex assisted with implementation review, adversarial tests, copy, documentation, and demo-production support; the entrant directed the product and evidence boundaries.
+The current public-v3 [2:13 demo video](https://youtu.be/UZaS9vG9Mkw) uses AI-generated narration, and that use is disclosed on YouTube. No AI-generated images were used. The opening 32 seconds center the separate Codex real-agent run documented above: edited, timestamped screenshots and actual tool activity show five preparation calls, human approval, the temporary sixth tool, its one use, and revocation. The evidence is explicitly distinguished from the app's deterministic runner and historical test-adapter images. Reset was not verified through the real-agent route and is reported only as a separate native Chrome check. Codex assisted with implementation review, adversarial tests, copy, documentation, and demo-production support; the entrant directed the product and evidence boundaries.
 
 ## Known limitations
 
@@ -176,7 +176,7 @@ See [Architecture](docs/architecture.md), [Security model](docs/security-model.m
 
 ## Submission readiness
 
-The official public endpoints are the [source repository](https://github.com/tandttakumi/agentic-service-dispatch) and [live app](https://agentic-service-dispatch.vercel.app). Public `main` publishes the byte-identical final-candidate runtime from source `ef35cfc`; [GitHub Actions](https://github.com/tandttakumi/agentic-service-dispatch/actions) independently reruns the tracked release gate for each published commit. The verified public-v2 [2:12 YouTube demo](https://youtu.be/N8LuuoV7zKI) records one final-candidate native WebMCP session in Chrome 151 and keeps the deterministic runner, AI narration, fictional data, and native evidence source-labeled. Final-candidate native gate evidence is also recorded in [the release-gate record](docs/final-candidate-native-evidence.md).
+The official public endpoints are the [source repository](https://github.com/tandttakumi/agentic-service-dispatch) and [live app](https://agentic-service-dispatch.vercel.app). Public `main` publishes the byte-identical final-candidate runtime from source `ef35cfc`; [GitHub Actions](https://github.com/tandttakumi/agentic-service-dispatch/actions) independently reruns the tracked release gate for each published commit. The verified public-v3 [2:13 YouTube demo](https://youtu.be/UZaS9vG9Mkw) makes the Codex + official Chrome DevTools for agents run its centerpiece, while keeping the deterministic runner, separate native Chrome Reset evidence, AI narration, fictional data, and edited-evidence boundaries explicit. Final-candidate native gate evidence is also recorded in [the release-gate record](docs/final-candidate-native-evidence.md).
 
 ## License
 

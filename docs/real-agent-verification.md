@@ -72,4 +72,4 @@ The original page-only screenshots contain fictional data and no browser tabs, p
 - No external reviewer, pilot user, measured time saving, revenue effect, or multi-industry adoption is claimed.
 - The isolated session ended after verification. Process-only MCP configuration was removed by shutdown; the existing persistent Codex configuration remained unchanged.
 
-The existing public [2:12 video](https://youtu.be/N8LuuoV7zKI) is separately labeled native Chrome footage using the deterministic runner. It is not presented as this real-agent run. The new evidence here supplements it.
+The current public [2:13 video](https://youtu.be/UZaS9vG9Mkw) makes this real-agent run its opening centerpiece. It labels the sequence as Codex + official Chrome DevTools for agents, uses edited timestamped screenshots and actual tool activity, and does not present the deterministic runner as the agent proof. Reset remains a separate native Chrome check and is not claimed for this route.
